@@ -1,0 +1,97 @@
+﻿@model Medical_Center_Management_System.Models.Appointment
+
+@{
+    ViewData["Title"] = "Delete Appointment";
+    var statusClass = Model.Status?.ToLower() switch
+    {
+        "confirmed" => "badge-confirmed",
+        "pending" => "badge-pending",
+        "cancelled" => "badge-cancelled",
+        "completed" => "badge-completed",
+        "needs follow up" => "badge-followup",
+        _ => "badge-pending"
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1>Delete Appointment</h1>
+        <p>This action cannot be undone</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="delete-card">
+    <div class="delete-card-header">
+        <div class="delete-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+            <div class="delete-card-title">Delete Appointment #@Model.AppointmentId?</div>
+            <div class="delete-card-subtitle">This appointment and its associated history will be permanently removed</div>
+        </div>
+    </div>
+
+    <div class="delete-body">
+        <!-- Appointment summary -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; border-bottom:1px solid var(--color-border);">
+            <div style="padding:14px 24px; border-right:1px solid var(--color-border);">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--color-text-3); margin-bottom:8px;">Patient</div>
+                <div style="font-weight:600;">@Model.Patient?.FullName</div>
+                <div style="font-size:12px; color:var(--color-text-3);">@Model.Patient?.PhoneNumber</div>
+            </div>
+            <div style="padding:14px 24px;">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--color-text-3); margin-bottom:8px;">Doctor</div>
+                <div style="font-weight:600;">@Model.Doctor?.FullName</div>
+                <div style="font-size:12px; color:var(--color-text-3);">@Model.Doctor?.Specialty?.Description</div>
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Date & Time</div>
+            <div class="detail-value" style="font-family:var(--font-mono);">
+                @Model.AppointmentDate.ToString("MMM dd, yyyy · HH:mm")
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Clinic</div>
+            <div class="detail-value">@Model.Clinic?.Name — @Model.Clinic?.Address</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">
+                <span class="badge-status @statusClass">@Model.Status</span>
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">History Record</div>
+            <div class="detail-value">
+                @if (Model.History != null)
+                {
+                    <span class="badge-status badge-cancelled">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:10px;"></i>
+                        History will also be deleted
+                    </span>
+                }
+                else
+                {
+                    <span class="badge-status badge-confirmed">No history linked</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="delete-footer">
+        <form asp-action="Delete" method="post" style="display:inline;">
+            <input type="hidden" asp-for="AppointmentId" />
+            <button type="submit" class="btn-danger-med">
+                <i class="fa-solid fa-trash"></i> Yes, Delete
+            </button>
+        </form>
+        <a href="javascript:history.back()" class="btn-secondary-med">
+            <i class="fa-solid fa-arrow-left"></i> Cancel
+        </a>
+    </div>
+</div>

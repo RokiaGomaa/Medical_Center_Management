@@ -1,0 +1,346 @@
+﻿@model Medical_Center_Management_System.Models.Patient
+
+@{
+    Layout = null;
+
+    int age = DateTime.Now.Year - Model.DateOfBirth.Year;
+
+    if (DateTime.Now.DayOfYear < Model.DateOfBirth.DayOfYear)
+    {
+        age--;
+    }
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+
+    <title>Patient Report</title>
+
+    <style>
+
+            body {
+                font-family: Arial;
+                margin: 30px;
+                color: #222;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 35px;
+            }
+
+                .header h1 {
+                    margin: 0;
+                    color: #0F766E;
+                }
+
+            .section {
+                margin-bottom: 30px;
+            }
+
+            .section-title {
+                background: #0F766E;
+                color: white;
+                padding: 10px;
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+
+                table th,
+                table td {
+                    border: 1px solid #ccc;
+                    padding: 10px;
+                    text-align: left;
+                    font-size: 14px;
+                }
+
+                table th {
+                    background-color: #f3f4f6;
+                }
+
+            .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                margin-top: 15px;
+            }
+
+            .info-box {
+                background: #f9fafb;
+                border: 1px solid #ddd;
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .label {
+                font-weight: bold;
+                color: #0F766E;
+            }
+
+            .empty {
+                color: #999;
+                font-style: italic;
+            }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+
+    <div class="header">
+        <h1>Medical Center Management System</h1>
+        <p>Patient Clinical Report</p>
+    </div>
+
+    <!-- Patient Information -->
+
+    <div class="section">
+
+        <div class="section-title">
+            Patient Information
+        </div>
+
+        <div class="info-grid">
+
+            <div class="info-box">
+                <span class="label">Full Name:</span>
+                @Model.FullName
+            </div>
+
+            <div class="info-box">
+                <span class="label">Phone Number:</span>
+                @Model.PhoneNumber
+            </div>
+
+            <div class="info-box">
+                <span class="label">Gender:</span>
+                @Model.Gender
+            </div>
+
+            <div class="info-box">
+                <span class="label">Age:</span>
+                @age Years
+            </div>
+
+            <div class="info-box">
+                <span class="label">Date Of Birth:</span>
+                @Model.DateOfBirth.ToString("dd MMM yyyy")
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Medical Record -->
+
+    <div class="section">
+
+        <div class="section-title">
+            Medical Record
+        </div>
+
+        @if (Model.MedicalRecord != null)
+        {
+            <table>
+
+                <tr>
+                    <th>Blood Type</th>
+                    <td>@Model.MedicalRecord.BloodType</td>
+                </tr>
+
+                <tr>
+                    <th>Height</th>
+                    <td>@Model.MedicalRecord.Height cm</td>
+                </tr>
+
+                <tr>
+                    <th>Weight</th>
+                    <td>@Model.MedicalRecord.Weight kg</td>
+                </tr>
+
+                <tr>
+                    <th>Diabetes</th>
+                    <td>@(Model.MedicalRecord.HasDiabetes ? "Yes" : "No")</td>
+                </tr>
+
+                <tr>
+                    <th>Hypertension</th>
+                    <td>@(Model.MedicalRecord.HasHypertension ? "Yes" : "No")</td>
+                </tr>
+
+                <tr>
+                    <th>Heart Disease</th>
+                    <td>@(Model.MedicalRecord.HasHeartDisease ? "Yes" : "No")</td>
+                </tr>
+
+                <tr>
+                    <th>Allergies</th>
+                    <td>@(Model.MedicalRecord.HasAllergies ? "Yes" : "No")</td>
+                </tr>
+
+                <tr>
+                    <th>Allergy Details</th>
+                    <td>
+                        @(string.IsNullOrWhiteSpace(Model.MedicalRecord.AllergyDetails)
+                            ? "No Details"
+                            : Model.MedicalRecord.AllergyDetails)
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Current Medications</th>
+                    <td>
+                        @(string.IsNullOrWhiteSpace(Model.MedicalRecord.CurrentMedications)
+                            ? "No Medications"
+                            : Model.MedicalRecord.CurrentMedications)
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Chronic Notes</th>
+                    <td>
+                        @(string.IsNullOrWhiteSpace(Model.MedicalRecord.ChronicDiseasesNotes)
+                            ? "No Notes"
+                            : Model.MedicalRecord.ChronicDiseasesNotes)
+                    </td>
+                </tr>
+
+            </table>
+        }
+        else
+        {
+            <p class="empty">No medical record available.</p>
+        }
+
+    </div>
+
+    <!-- Appointments -->
+
+    <div class="section">
+
+        <div class="section-title">
+            Appointments
+        </div>
+
+        @if (Model.Appointments != null && Model.Appointments.Any())
+        {
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Doctor</th>
+                        <th>Clinic</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var appointment in Model.Appointments.OrderByDescending(a => a.AppointmentDate))
+                    {
+                        <tr>
+
+                            <td>
+                                @appointment.AppointmentDate.ToString("dd MMM yyyy hh:mm tt")
+                            </td>
+
+                            <td>
+                                Dr. @appointment.Doctor?.FullName
+                            </td>
+
+                            <td>
+                                @appointment.Clinic?.Name
+                            </td>
+
+                            <td>
+                                @appointment.Status
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+        }
+        else
+        {
+            <p class="empty">No appointments found.</p>
+        }
+
+    </div>
+
+    <!-- Clinical History -->
+
+    <div class="section">
+
+        <div class="section-title">
+            Clinical History
+        </div>
+
+        @{
+            var histories = Model.Appointments
+                .Where(a => a.History != null)
+                .Select(a => a.History)
+                .ToList();
+        }
+
+        @if (histories.Any())
+        {
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Diagnosis</th>
+                        <th>Treatment</th>
+                        <th>Status</th>
+                        <th>Follow Up</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var history in histories)
+                    {
+                        <tr>
+
+                            <td>@history.Diagnosis</td>
+
+                            <td>@history.Treatment</td>
+
+                            <td>@history.Status</td>
+
+                            <td>
+                                @(history.FollowUpDate.HasValue
+                                    ? history.FollowUpDate.Value.ToString("dd MMM yyyy")
+                                    : "No Follow Up")
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+        }
+        else
+        {
+            <p class="empty">No clinical history found.</p>
+        }
+
+    </div>
+
+</body>
+</html>

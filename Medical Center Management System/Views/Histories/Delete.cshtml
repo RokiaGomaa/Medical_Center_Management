@@ -1,0 +1,92 @@
+﻿@model Medical_Center_Management_System.Models.History
+
+@{
+    ViewData["Title"] = "Delete History";
+    var statusClass = Model.Status?.ToLower() switch
+    {
+        "stable" => "badge-confirmed",
+        "improved" => "badge-completed",
+        "recovered" => "badge-recovered",
+        "completed" => "badge-completed",
+        "needs follow up" => "badge-followup",
+        _ => "badge-pending"
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1>Delete History</h1>
+        <p>This action cannot be undone</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back 
+    </a>
+</div>
+
+<div class="delete-card">
+    <div class="delete-card-header">
+        <div class="delete-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+            <div class="delete-card-title">Delete history record?</div>
+            <div class="delete-card-subtitle">This clinical history will be permanently removed</div>
+        </div>
+    </div>
+
+    <div class="delete-body">
+
+        <!-- Appointment summary -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; border-bottom:1px solid var(--color-border);">
+            <div style="padding:14px 24px; border-right:1px solid var(--color-border);">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-3); margin-bottom:6px;">Patient</div>
+                <div style="font-weight:600;">@Model.Appointment?.Patient?.FullName</div>
+                <div style="font-size:12px; color:var(--color-text-3);">@Model.Appointment?.Patient?.PhoneNumber</div>
+            </div>
+            <div style="padding:14px 24px;">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-3); margin-bottom:6px;">Doctor</div>
+                <div style="font-weight:600;">@Model.Appointment?.Doctor?.FullName</div>
+                <div style="font-size:12px; color:var(--color-text-3);">@Model.Appointment?.Clinic?.Name</div>
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Appointment Date</div>
+            <div class="detail-value" style="font-family:var(--font-mono);">
+                @Model.Appointment?.AppointmentDate.ToString("MMM dd, yyyy · HH:mm")
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Diagnosis</div>
+            <div class="detail-value">@(Model.Diagnosis ?? "—")</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Treatment</div>
+            <div class="detail-value">@(Model.Treatment ?? "—")</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">
+                <span class="badge-status @statusClass">@(Model.Status ?? "—")</span>
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Follow Up Date</div>
+            <div class="detail-value" style="font-family:var(--font-mono);">
+                @(Model.FollowUpDate.HasValue ? Model.FollowUpDate.Value.ToString("MMM dd, yyyy") : "None")
+            </div>
+        </div>
+    </div>
+
+    <div class="delete-footer">
+        <form asp-action="Delete" method="post" style="display:inline;">
+            <input type="hidden" asp-for="HistoryId" />
+            <button type="submit" class="btn-danger-med">
+                <i class="fa-solid fa-trash"></i> Yes, Delete
+            </button>
+        </form>
+        <a href="javascript:history.back()" class="btn-secondary-med">
+            <i class="fa-solid fa-xmark"></i> Cancel
+        </a>
+    </div>
+</div>

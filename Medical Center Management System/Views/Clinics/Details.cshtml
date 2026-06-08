@@ -1,0 +1,84 @@
+﻿@model Medical_Center_Management_System.Models.Clinic
+
+@{
+    ViewData["Title"] = "Clinic Details";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Clinic Details</h1>
+        <p>Full information for this clinic</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back 
+    </a>
+</div>
+
+<div class="detail-card">
+    <div class="detail-card-header">
+        <div class="detail-avatar-icon">
+            <i class="fa-solid fa-hospital"></i>
+        </div>
+        <div>
+            <div class="detail-title">@Model.Name</div>
+            <div class="detail-subtitle">@Model.Address</div>
+        </div>
+        <div style="margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+            <span class="badge-status badge-confirmed">
+                @Model.Doctors.Count() doctors
+            </span>
+            <span class="badge-status badge-completed">
+                @Model.Appointments.Count() appointments
+            </span>
+        </div>
+    </div>
+
+    <div class="detail-body">
+        <div class="detail-row">
+            <div class="detail-label">Clinic Name</div>
+            <div class="detail-value" style="font-weight:500;">@Model.Name</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Address</div>
+            <div class="detail-value">@Model.Address</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Phone Number</div>
+            <div class="detail-value" style="font-family:var(--font-mono);">@Model.PhoneNumber</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Consultation Price</div>
+            <div class="detail-value" style="font-weight:600; color:var(--color-primary);">
+                @Model.Price.ToString("C")
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Max Patients / Day</div>
+            <div class="detail-value">@Model.MaxPatients patients</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Working Hours</div>
+            <div class="detail-value">
+                <i class="fa-regular fa-clock" style="color:var(--color-text-3); margin-right:6px;"></i>
+                @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Total Doctors</div>
+            <div class="detail-value">@Model.Doctors.Count()</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Total Appointments</div>
+            <div class="detail-value">@Model.Appointments.Count()</div>
+        </div>
+    </div>
+
+    <div class="detail-footer">
+        <a asp-action="Edit" asp-route-id="@Model.ClinicId" class="btn-primary-med">
+            <i class="fa-solid fa-pen"></i> Edit
+        </a>
+        <a asp-action="Delete" asp-route-id="@Model.ClinicId" class="btn-danger-med">
+            <i class="fa-solid fa-trash"></i> Delete
+        </a>
+    </div>
+</div>

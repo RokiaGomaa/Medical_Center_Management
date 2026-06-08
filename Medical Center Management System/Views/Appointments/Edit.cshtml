@@ -1,0 +1,97 @@
+﻿@model Medical_Center_Management_System.Models.Appointment
+
+@{
+    ViewData["Title"] = "Edit Appointment";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Appointment</h1>
+        <p>Update this appointment's details</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="form-card">
+    <div class="form-card-header">
+        <h2><i class="fa-solid fa-pen" style="color:var(--color-warning); margin-right:8px;"></i>Edit Appointment</h2>
+        <p>Modify the appointment details below</p>
+    </div>
+
+    <form asp-action="Edit" method="post">
+        <div class="form-card-body">
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <input type="hidden" asp-for="AppointmentId" />
+
+            <!-- Date & Status -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group-med">
+                    <label asp-for="AppointmentDate">Date & Time</label>
+                    <input asp-for="AppointmentDate" class="form-control-med" type="datetime-local" />
+                    <span asp-validation-for="AppointmentDate" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="Status">Status</label>
+                    <select asp-for="Status" class="form-control-med">
+                        <option value="">— Select status —</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Needs Follow Up">Needs Follow Up</option>
+                    </select>
+                    <span asp-validation-for="Status" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Patient -->
+            <div class="form-group-med">
+                <label asp-for="PatientId">Patient</label>
+                <select asp-for="PatientId" class="form-control-med" asp-items="ViewBag.PatientId">
+                    <option value="">— Select patient —</option>
+                </select>
+                <span asp-validation-for="PatientId" class="field-validation-error"></span>
+            </div>
+
+            <!-- Doctor & Clinic -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group-med">
+                    <label asp-for="DoctorId">Doctor</label>
+                    <select asp-for="DoctorId" class="form-control-med" asp-items="ViewBag.DoctorId">
+                        <option value="">— Select doctor —</option>
+                    </select>
+                    <span asp-validation-for="DoctorId" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="ClinicId">Clinic</label>
+                    <select asp-for="ClinicId" class="form-control-med" asp-items="ViewBag.ClinicId">
+                        <option value="">— Select clinic —</option>
+                    </select>
+                    <span asp-validation-for="ClinicId" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <div style="padding:12px 14px; background:var(--color-info-bg); border:1px solid #BFDBFE; border-radius:var(--radius-md); font-size:13px; color:var(--color-info-text);">
+                <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
+                Conflict checks will run automatically — the system will warn you if any doctor, patient, or clinic is double-booked at the selected time.
+            </div>
+        </div>
+
+        <div class="form-card-footer">
+            <button type="submit" class="btn-primary-med">
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+            </button>
+            <a href="javascript:history.back()" class="btn-secondary-med">
+                <i class="fa-solid fa-arrow-left"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,107 @@
+﻿@model Medical_Center_Management_System.Models.Patient
+
+@{
+    ViewData["Title"] = "Add Patient";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Add Patient</h1>
+        <p>Register a new patient in the system</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- Workflow Steps Banner -->
+<div style="display:flex; align-items:center; gap:0; margin-bottom:20px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm);">
+
+    <!-- Step 1 - Active -->
+    <div style="flex:1; padding:14px 20px; display:flex; align-items:center; gap:12px; background:var(--color-primary-light); border-right:1px solid var(--color-border);">
+        <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary); color:white; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0;">1</div>
+        <div>
+            <div style="font-size:13px; font-weight:600; color:var(--color-primary-dark);">Patient Info</div>
+            <div style="font-size:11px; color:var(--color-primary);">Currently here</div>
+        </div>
+    </div>
+
+    <div style="color:var(--color-border-strong); font-size:18px; padding:0 4px;">›</div>
+
+    <!-- Step 2 -->
+    <div style="flex:1; padding:14px 20px; display:flex; align-items:center; gap:12px; border-right:1px solid var(--color-border);">
+        <div style="width:32px; height:32px; border-radius:50%; background:var(--color-surface-2); color:var(--color-text-3); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0;">2</div>
+        <div>
+            <div style="font-size:13px; font-weight:600; color:var(--color-text-2);">Medical Record</div>
+            <div style="font-size:11px; color:var(--color-text-3);">After saving</div>
+        </div>
+    </div>
+
+    <div style="color:var(--color-border-strong); font-size:18px; padding:0 4px;">›</div>
+
+    <!-- Step 3 -->
+    <div style="flex:1; padding:14px 20px; display:flex; align-items:center; gap:12px;">
+        <div style="width:32px; height:32px; border-radius:50%; background:var(--color-surface-2); color:var(--color-text-3); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0;">3</div>
+        <div>
+            <div style="font-size:13px; font-weight:600; color:var(--color-text-2);">Book Appointment</div>
+            <div style="font-size:11px; color:var(--color-text-3);">Optional</div>
+        </div>
+    </div>
+</div>
+
+<div class="form-card">
+    <div class="form-card-header">
+        <h2><i class="fa-solid fa-user-plus" style="color:var(--color-primary); margin-right:8px;"></i>Patient Information</h2>
+        <p>Fill in the details below — you'll be taken to the patient's profile to complete the next steps</p>
+    </div>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="form-card-body">
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <!-- Full Name -->
+            <div class="form-group-med">
+                <label asp-for="FullName">Full Name</label>
+                <input asp-for="FullName" class="form-control-med" placeholder="e.g. Ahmed Mohamed Ali" />
+                <span asp-validation-for="FullName" class="field-validation-error"></span>
+            </div>
+
+            <!-- Phone & Gender -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group-med">
+                    <label asp-for="PhoneNumber">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control-med" placeholder="e.g. 01012345678" />
+                    <span asp-validation-for="PhoneNumber" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="Gender">Gender</label>
+                    <select asp-for="Gender" class="form-control-med" asp-items="ViewBag.GenderList">
+                        <option value="">— Select gender —</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Date of Birth -->
+            <div class="form-group-med">
+                <label asp-for="DateOfBirth">Date of Birth</label>
+                <input asp-for="DateOfBirth" class="form-control-med" type="date" />
+                <span asp-validation-for="DateOfBirth" class="field-validation-error"></span>
+            </div>
+        </div>
+
+        <div class="form-card-footer">
+            <button type="submit" class="btn-primary-med">
+                <i class="fa-solid fa-arrow-right"></i> Save & Continue to Profile
+            </button>
+            <a href="javascript:history.back()" class="btn-secondary-med">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

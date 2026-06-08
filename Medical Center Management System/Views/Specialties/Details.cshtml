@@ -1,0 +1,56 @@
+﻿@model Medical_Center_Management_System.Models.Specialty
+
+@{
+    ViewData["Title"] = "Specialty Details";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Specialty Details</h1>
+        <p>Full information for this specialty</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="detail-card">
+    <div class="detail-card-header">
+        <div class="detail-avatar-icon">
+            <i class="fa-solid fa-stethoscope"></i>
+        </div>
+        <div>
+            <div class="detail-title">@Model.Name</div>
+            <div class="detail-subtitle">Medical Specialty</div>
+        </div>
+        <div style="margin-left:auto;">
+            <span class="badge-status badge-confirmed">
+                @Model.Doctors.Count() doctors
+            </span>
+        </div>
+    </div>
+
+    <div class="detail-body">
+        <div class="detail-row">
+            <div class="detail-label">Specialty Name</div>
+            <div class="detail-value">@Model.Name</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Description</div>
+            <div class="detail-value" style="line-height:1.6;">@Model.Description</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Total Doctors</div>
+            <div class="detail-value">@Model.Doctors.Count()</div>
+        </div>
+    </div>
+
+    <div class="detail-footer">
+        <a asp-action="Edit" asp-route-id="@Model.SpecialtyId" class="btn-primary-med">
+            <i class="fa-solid fa-pen"></i> Edit
+        </a>
+        <a asp-action="Delete" asp-route-id="@Model.SpecialtyId" class="btn-danger-med">
+            <i class="fa-solid fa-trash"></i> Delete
+        </a>
+    </div>
+</div>

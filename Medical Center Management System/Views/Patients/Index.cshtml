@@ -1,0 +1,207 @@
+﻿@model Medical_Center_Management_System.ViewModels.PaginatedList<Medical_Center_Management_System.Models.Patient>
+
+@{
+    ViewData["Title"] = "Patients";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Patients</h1>
+        <p>Manage all registered patients in the system</p>
+    </div>
+    <a asp-action="Create" class="btn-primary-med">
+        <i class="fa-solid fa-plus"></i> Add Patient
+    </a>
+</div>
+
+<div class="data-table-wrapper">
+    <div class="data-table-toolbar" style="flex-wrap:wrap">
+        <div class="data-table-wrapper">
+            <div class="data-table-toolbar" style="flex-wrap:wrap; gap:10px;">
+                <div class="search-box" style="flex:1; min-width:700px;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name or phone..." />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="padding:12px 16px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+
+        <div style="font-size:12.5px; color:var(--color-text-3);">
+            <span id="rowCount">@Model.TotalItems</span> patients
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="data-table" id="patientsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Phone</th>
+                    <th>Gender</th>
+                    <th>Date of Birth</th>
+                    <th>Age</th>
+                    <th>Medical Record</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = ((Model.PageIndex - 1) * Model.PageSize) + 1;
+                }
+                @foreach (var item in Model)
+                {
+                    var initials = string.Join("", item.FullName.Split(' ')
+                    .Take(2).Select(w => w[0].ToString().ToUpper()));
+                    var age = DateTime.Today.Year - item.DateOfBirth.Year;
+                    if (item.DateOfBirth.Date > DateTime.Today.AddYears(-age)) age--;
+                    var avatarColor = item.Gender?.ToLower() == "female"
+                    ? "background:#FDF2F8; color:#9D174D;"
+                    : "background:var(--color-primary-light); color:var(--color-primary-dark);";
+
+                    <tr>
+                        <td style="color:var(--color-text-3); font-size:12px;">@i</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:36px; height:36px; border-radius:50%; @avatarColor display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; flex-shrink:0;">
+                                    @initials
+                                </div>
+                                <div>
+                                    <div style="font-weight:500;">@item.FullName</div>
+                                    <div style="font-size:12px; color:var(--color-text-3);">ID #@item.PatientId</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="font-family:var(--font-mono); font-size:13px;">@item.PhoneNumber</td>
+                        <td>
+                            @if (item.Gender?.ToLower() == "female")
+                            {
+                                <span class="badge-status" style="background:#FDF2F8; color:#9D174D;">
+                                    <i class="fa-solid fa-venus" style="font-size:10px;"></i> Female
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-completed">
+                                    <i class="fa-solid fa-mars" style="font-size:10px;"></i> Male
+                                </span>
+                            }
+                        </td>
+                        <td style="font-size:13px; color:var(--color-text-2);">
+                            @item.DateOfBirth.ToString("MMM dd, yyyy")
+                        </td>
+                        <td>
+                            <span class="badge-status badge-pending">@age yrs</span>
+                        </td>
+                        <td>
+                            @if (item.MedicalRecord != null)
+                            {
+                                <span class="badge-status badge-confirmed">
+                                    <i class="fa-solid fa-circle-check" style="font-size:10px;"></i> On file
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-cancelled">
+                                    <i class="fa-solid fa-circle-xmark" style="font-size:10px;"></i> Missing
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a asp-action="Details" asp-route-id="@item.PatientId"
+                                   class="btn-action btn-action-view" title="View full profile">
+                                    <i class="fa-solid fa-eye"></i> View
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@item.PatientId"
+                                   class="btn-action btn-action-edit" title="Edit">
+                                    <i class="fa-solid fa-pen"></i> Edit
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.PatientId"
+                                   class="btn-action btn-action-delete" title="Delete">
+                                    <i class="fa-solid fa-trash"></i> Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+        </table>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:18px;">
+
+                @if (Model.HasPreviousPage)
+                {
+                    <a class="btn-secondary-med"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex - 1)"
+                       asp-route-searchPhone="@Context.Request.Query["searchPhone"]">
+                        Previous
+                    </a>
+                }
+                else
+                {
+                    <span class="btn-secondary-med" style="opacity:0.5; pointer-events:none;">
+                        Previous
+                    </span>
+                }
+
+                <span style="font-size:14px; color:var(--color-text-2);">
+                    Page @Model.PageIndex of @Model.TotalPages
+                </span>
+
+                @if (Model.HasNextPage)
+                {
+                    <a class="btn-secondary-med"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex + 1)"
+                       asp-route-searchPhone="@Context.Request.Query["searchPhone"]">
+                        Next
+                    </a>
+                }
+                else
+                {
+                    <span class="btn-secondary-med" style="opacity:0.5; pointer-events:none;">
+                        Next
+                    </span>
+                }
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
+            <h3>No patients found</h3>
+            <p>Get started by registering your first patient.</p>
+            <a asp-action="Create" class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
+                <i class="fa-solid fa-plus"></i> Add Patient
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        const input = document.getElementById('searchInput');
+        const rows = document.querySelectorAll('#patientsTable tbody tr');
+        const count = document.getElementById('rowCount');
+
+        input.addEventListener('input', () => {
+            const q = input.value.toLowerCase();
+            let visible = 0;
+            rows.forEach(row => {
+                const match = row.textContent.toLowerCase().includes(q);
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+            count.textContent = visible;
+        });
+    </script>
+}

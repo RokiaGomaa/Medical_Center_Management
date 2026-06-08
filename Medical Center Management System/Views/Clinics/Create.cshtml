@@ -1,0 +1,278 @@
+﻿@model Medical_Center_Management_System.Models.Clinic
+
+@{
+    ViewData["Title"] = "Add Clinic";
+}
+
+<div class="page-header">
+
+    <div>
+        <h1>Add Clinic</h1>
+        <p>Register a new clinic location</p>
+    </div>
+
+    <a href="javascript:history.back()"
+       class="btn-secondary-med">
+
+        <i class="fa-solid fa-arrow-left"></i>
+
+        Back 
+
+    </a>
+
+</div>
+
+
+<div class="form-card">
+
+    <div class="form-card-header">
+
+        <h2>
+            <i class="fa-solid fa-hospital"
+               style="color:var(--color-primary); margin-right:8px;">
+            </i>
+
+            Clinic Information
+        </h2>
+
+        <p>
+            Fill in the details below to register a new clinic
+        </p>
+
+    </div>
+
+
+    <form asp-action="Create" method="post">
+
+        <div class="form-card-body">
+
+            <div asp-validation-summary="ModelOnly"
+                 class="validation-summary-errors">
+            </div>
+
+
+            <!-- ===================================== -->
+            <!-- System Info -->
+            <!-- ===================================== -->
+
+            <div style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:16px;
+                margin-bottom:10px;">
+
+                <div>
+
+                    <label style="
+                        font-size:12px;
+                        color:#666;">
+
+                        📞 Phone Number
+
+                    </label>
+
+                    <input class="form-control-med"
+                           value="@AppSettings.PhoneNumber"
+                           readonly />
+
+                </div>
+
+
+                <div>
+
+                    <label style="
+                        font-size:12px;
+                        color:#666;">
+
+                        📍 Address
+
+                    </label>
+
+                    <input class="form-control-med"
+                           value="@AppSettings.Address"
+                           readonly />
+
+                </div>
+
+            </div>
+
+
+            <!-- ===================================== -->
+            <!-- Clinic Name -->
+            <!-- ===================================== -->
+
+            <div class="form-group-med">
+
+                <label asp-for="Name">
+                    Clinic Name
+                </label>
+
+                <input asp-for="Name"
+                       class="form-control-med"
+                       placeholder="e.g. Central Clinic" />
+
+                <span asp-validation-for="Name"
+                      class="field-validation-error">
+                </span>
+
+            </div>
+
+
+            <!-- ===================================== -->
+            <!-- Specialty -->
+            <!-- ===================================== -->
+
+            <div class="form-group-med">
+
+                <label asp-for="SpecialtyId">
+                    Specialty
+                </label>
+
+                <select asp-for="SpecialtyId"
+                        class="form-control-med"
+                        asp-items="ViewBag.SpecialtyId">
+
+                    <option value="">
+                        — Select specialty —
+                    </option>
+
+                </select>
+
+                <span asp-validation-for="SpecialtyId"
+                      class="field-validation-error">
+                </span>
+
+            </div>
+
+
+            <!-- ===================================== -->
+            <!-- Price & Capacity -->
+            <!-- ===================================== -->
+
+            <div style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:16px;">
+
+                <div class="form-group-med">
+
+                    <label asp-for="Price">
+                        Consultation Price
+                    </label>
+
+                    <input asp-for="Price"
+                           class="form-control-med"
+                           placeholder="0.00"
+                           type="number"
+                           step="0.01" />
+
+                    <span asp-validation-for="Price"
+                          class="field-validation-error">
+                    </span>
+
+                </div>
+
+
+                <div class="form-group-med">
+
+                    <label asp-for="MaxPatients">
+                        Max Patients per Day
+                    </label>
+
+                    <input asp-for="MaxPatients"
+                           class="form-control-med"
+                           placeholder="e.g. 30"
+                           type="number" />
+
+                    <span asp-validation-for="MaxPatients"
+                          class="field-validation-error">
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===================================== -->
+            <!-- Working Hours -->
+            <!-- ===================================== -->
+
+            <div style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:16px;">
+
+                <div class="form-group-med">
+
+                    <label asp-for="StartTime">
+                        Opening Time
+                    </label>
+
+                    <input asp-for="StartTime"
+                           class="form-control-med"
+                           type="time" />
+
+                    <span asp-validation-for="StartTime"
+                          class="field-validation-error">
+                    </span>
+
+                </div>
+
+
+                <div class="form-group-med">
+
+                    <label asp-for="EndTime">
+                        Closing Time
+                    </label>
+
+                    <input asp-for="EndTime"
+                           class="form-control-med"
+                           type="time" />
+
+                    <span asp-validation-for="EndTime"
+                          class="field-validation-error">
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ===================================== -->
+        <!-- Footer -->
+        <!-- ===================================== -->
+
+        <div class="form-card-footer">
+
+            <button type="submit"
+                    class="btn-primary-med">
+
+                <i class="fa-solid fa-floppy-disk"></i>
+
+                Save Clinic
+
+            </button>
+
+            <a href="javascript:history.back()"
+               class="btn-secondary-med">
+
+                Cancel
+
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+}

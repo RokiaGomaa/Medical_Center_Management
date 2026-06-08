@@ -1,0 +1,187 @@
+﻿@model Medical_Center_Management_System.ViewModels.RegisterVM
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Register";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register — Medix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+            body {
+                background: var(--color-bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 24px 0;
+            }
+
+            .auth-card {
+                background: var(--color-surface);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-xl);
+                padding: 40px;
+                width: 100%;
+                max-width: 480px;
+                box-shadow: var(--shadow-md);
+            }
+
+            .auth-logo {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 32px;
+            }
+
+            .auth-logo-mark {
+                width: 36px;
+                height: 36px;
+                background: var(--color-primary);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 16px;
+            }
+
+            .auth-logo-text {
+                font-size: 22px;
+                font-weight: 600;
+                color: var(--color-text-1);
+            }
+
+            .auth-title {
+                font-size: 20px;
+                font-weight: 600;
+                color: var(--color-text-1);
+                margin-bottom: 6px;
+            }
+
+            .auth-subtitle {
+                font-size: 13px;
+                color: var(--color-text-3);
+                margin-bottom: 28px;
+            }
+
+            .auth-footer {
+                text-align: center;
+                margin-top: 24px;
+                font-size: 13px;
+                color: var(--color-text-3);
+            }
+
+                .auth-footer a {
+                    color: var(--color-primary);
+                    text-decoration: none;
+                    font-weight: 500;
+                }
+
+            .info-banner {
+                background: var(--color-primary-light);
+                border: 1px solid #A7E8CF;
+                border-radius: var(--radius-md);
+                padding: 12px 14px;
+                font-size: 12.5px;
+                color: var(--color-primary-dark);
+                margin-bottom: 20px;
+            }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+
+        <div class="auth-logo">
+            <div class="auth-logo-mark"><i class="fa-solid fa-plus"></i></div>
+            <span class="auth-logo-text">Medix</span>
+        </div>
+
+        <div class="auth-title">Create your account</div>
+        <div class="auth-subtitle">Register as a patient to book appointments and view your health records</div>
+
+        <div class="info-banner">
+            <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
+            Your patient profile will be created automatically when you register.
+        </div>
+
+        <form asp-action="Register" method="post">
+
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <div class="form-group-med">
+                <label asp-for="FullName">Full Name</label>
+                <input asp-for="FullName" class="form-control-med" placeholder="e.g. Ahmed Mohamed Ali" />
+                <span asp-validation-for="FullName" class="field-validation-error"></span>
+            </div>
+
+            <div class="form-group-med">
+                <label asp-for="Email">Email Address</label>
+                <input asp-for="Email" class="form-control-med" placeholder="you@example.com" type="email" />
+                <span asp-validation-for="Email" class="field-validation-error"></span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                <div class="form-group-med">
+                    <label asp-for="PhoneNumber">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control-med" placeholder="01012345678" />
+                    <span asp-validation-for="PhoneNumber" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="Gender">Gender</label>
+                    <select asp-for="Gender" class="form-control-med">
+                        <option value="">— Select —</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <div class="form-group-med">
+                <label asp-for="DateOfBirth">Date of Birth</label>
+                <input asp-for="DateOfBirth" class="form-control-med" type="date" />
+                <span asp-validation-for="DateOfBirth" class="field-validation-error"></span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                <div class="form-group-med">
+                    <label asp-for="Password">Password</label>
+                    <input asp-for="Password" class="form-control-med" type="password" placeholder="Min 8 characters" />
+                    <span asp-validation-for="Password" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="ConfirmPassword">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" class="form-control-med" type="password" placeholder="Repeat password" />
+                    <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary-med" style="width:100%; justify-content:center; margin-top:4px;">
+                <i class="fa-solid fa-user-plus"></i> Create Account
+            </button>
+
+        </form>
+
+        <div class="auth-footer">
+            Already have an account?
+            <a asp-action="Login" asp-controller="Auth">Sign in</a>
+        </div>
+
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

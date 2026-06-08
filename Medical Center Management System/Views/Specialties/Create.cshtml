@@ -1,0 +1,54 @@
+﻿@model Medical_Center_Management_System.Models.Specialty
+
+@{
+    ViewData["Title"] = "Add Specialty";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Add Specialty</h1>
+        <p>Create a new medical specialty</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back 
+    </a>
+</div>
+
+<div class="form-card">
+    <div class="form-card-header">
+        <h2><i class="fa-solid fa-stethoscope" style="color:var(--color-primary);margin-right:8px;"></i>Specialty Information</h2>
+        <p>Fill in the details below to add a new specialty</p>
+    </div>
+
+    <form asp-action="Create" method="post">
+        <div class="form-card-body">
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <div class="form-group-med">
+                <label asp-for="Name">Specialty Name</label>
+                <input asp-for="Name" class="form-control-med" placeholder="e.g. Cardiology" />
+                <span asp-validation-for="Name" class="field-validation-error"></span>
+            </div>
+
+            <div class="form-group-med">
+                <label asp-for="Description">Description</label>
+                <textarea asp-for="Description" class="form-control-med" rows="4"
+                          placeholder="Brief description of this specialty..."></textarea>
+                <span asp-validation-for="Description" class="field-validation-error"></span>
+            </div>
+        </div>
+
+        <div class="form-card-footer">
+            <button type="submit" class="btn-primary-med">
+                <i class="fa-solid fa-floppy-disk"></i> Save Specialty
+            </button>
+            <a href="javascript:history.back()" class="btn-secondary-med">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

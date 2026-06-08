@@ -1,0 +1,210 @@
+﻿@model Medical_Center_Management_System.Models.Doctor
+
+@{
+    ViewData["Title"] = "Doctor Details";
+
+    var initials = string.Join("", Model.FullName
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2).Select(w => w[0].ToString().ToUpper()));
+
+    var expLabel = Model.YearsOfExperience >= 10 ? "Senior"
+                 : Model.YearsOfExperience >= 5 ? "Mid-level"
+                 : "Junior";
+
+    var expClass = Model.YearsOfExperience >= 10 ? "badge-confirmed"
+                 : Model.YearsOfExperience >= 5 ? "badge-completed"
+                 : "badge-pending";
+
+    var totalPatients = Model.Appointments?.Select(a => a.PatientId).Distinct().Count() ?? 0;
+    var totalAppts = Model.Appointments?.Count() ?? 0;
+    var todayAppts = Model.Appointments?.Count(a => a.AppointmentDate.Date == DateTime.Today) ?? 0;
+    var pendingAppts = Model.Appointments?.Count(a => a.Status == "Pending") ?? 0;
+
+    var recentAppts = Model.Appointments?
+        .OrderByDescending(a => a.AppointmentDate)
+        .Take(5)
+        .ToList() ?? new();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Doctor Details</h1>
+        <p>Full information for this doctor</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- ============================================================ -->
+<!-- PROFILE HERO                                                 -->
+<!-- ============================================================ -->
+<div style="background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); padding:28px 28px 0;
+    margin-bottom:20px; box-shadow:var(--shadow-sm); overflow:hidden;">
+
+    <!-- Top row -->
+    <div style="display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-bottom:24px;">
+
+        <!-- Avatar -->
+        <div style="width:72px; height:72px; border-radius:50%;
+            background:#EFF6FF; color:#1E40AF;
+            display:flex; align-items:center; justify-content:center;
+            font-size:26px; font-weight:700; flex-shrink:0;
+            border:3px solid #BFDBFE;">
+            @initials
+        </div>
+
+        <!-- Info -->
+        <div style="flex:1; min-width:200px;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div style="font-size:22px; font-weight:700; color:var(--color-text-1);">
+                    @Model.FullName
+                </div>
+                <span class="badge-status @expClass">@expLabel</span>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:8px; font-size:13px; color:var(--color-text-3);">
+                <span>
+                    <span class="badge-status badge-completed" style="font-size:12px;">
+                        <i class="fa-solid fa-stethoscope" style="font-size:10px;"></i>
+                        @Model.Specialty?.Description
+                    </span>
+                </span>
+                <span>
+                    <i class="fa-solid fa-hospital" style="margin-right:4px;"></i>
+                    @Model.Clinic?.Name
+                </span>
+                <span>
+                    <i class="fa-solid fa-phone" style="margin-right:4px;"></i>
+                    <span style="font-family:var(--font-mono);">@Model.PhoneNumber</span>
+                </span>
+                <span>
+                    <i class="fa-regular fa-clock" style="margin-right:4px;"></i>
+                    @Model.Clinic?.StartTime.ToString(@"hh\:mm") – @Model.Clinic?.EndTime.ToString(@"hh\:mm")
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Stat strip -->
+    <div style="display:grid; grid-template-columns:repeat(4,1fr);
+        border-top:1px solid var(--color-border); margin:0 -28px;">
+        @{
+            void StatCell(string icon, string value, string label, string color)
+            {
+                <div style="padding:14px 20px; text-align:center; border-right:1px solid var(--color-border);">
+                    <div style="font-size:11px; color:var(--color-text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">@label</div>
+                    <div style="font-size:20px; font-weight:700; color:@color;">@value</div>
+                </div>
+            }
+        }
+        @{
+            StatCell("users", totalPatients.ToString(), "Unique Patients", "var(--color-text-1)");
+        }
+        @{
+            StatCell("calendar-check", totalAppts.ToString(), "Total Appointments", "var(--color-text-1)");
+        }
+        @{
+            StatCell("calendar-day", todayAppts.ToString(), "Today", "#1D9E75");
+        }
+        @{
+            StatCell("clock", pendingAppts.ToString(), "Pending", "#F59E0B");
+        }
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TWO-COLUMN LAYOUT                                            -->
+<!-- ============================================================ -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+    <!-- Clinic details -->
+    <div class="detail-card" style="max-width:unset;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon"><i class="fa-solid fa-hospital"></i></div>
+            <div>
+                <div class="detail-title">Clinic Information</div>
+                <div class="detail-subtitle">Your assigned clinic</div>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Clinic Name</div>
+                <div class="detail-value" style="font-weight:500;">@Model.Clinic?.Name</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Address</div>
+                <div class="detail-value">@Model.Clinic?.Address</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Phone</div>
+                <div class="detail-value" style="font-family:var(--font-mono);">@Model.Clinic?.PhoneNumber</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Working Hours</div>
+                <div class="detail-value">
+                    <i class="fa-regular fa-clock" style="margin-right:4px; color:var(--color-text-3);"></i>
+                    @Model.Clinic?.StartTime.ToString(@"hh\:mm") – @Model.Clinic?.EndTime.ToString(@"hh\:mm")
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Consultation Price</div>
+                <div class="detail-value" style="font-weight:600; color:var(--color-primary);">
+                    @Model.Clinic?.Price.ToString("C")
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Max Patients / Day</div>
+                <div class="detail-value">@Model.Clinic?.MaxPatients</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctor details -->
+    <div class="detail-card" style="max-width:unset;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon" style="background:#EFF6FF; color:#1E40AF;">
+                <i class="fa-solid fa-user-doctor"></i>
+            </div>
+            <div>
+                <div class="detail-title">Professional Info</div>
+                <div class="detail-subtitle">Your credentials</div>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Full Name</div>
+                <div class="detail-value" style="font-weight:500;">@Model.FullName</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Specialty</div>
+                <div class="detail-value">
+                    <span class="badge-status badge-completed">
+                        <i class="fa-solid fa-stethoscope" style="font-size:10px;"></i>
+                        @Model.Specialty?.Description
+                    </span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Experience</div>
+                <div class="detail-value">
+                    @Model.YearsOfExperience year(s)
+                    <span class="badge-status @expClass" style="margin-left:8px; font-size:11px;">@expLabel</span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Phone</div>
+                <div class="detail-value" style="font-family:var(--font-mono);">@Model.PhoneNumber</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Total Patients Seen</div>
+                <div class="detail-value" style="font-weight:600; color:var(--color-primary);">
+                    @totalPatients unique patient(s)
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

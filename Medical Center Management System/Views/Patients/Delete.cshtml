@@ -1,0 +1,125 @@
+﻿@model Medical_Center_Management_System.Models.Patient
+
+@{
+    ViewData["Title"] = "Delete Patient";
+    var initials = string.Join("", Model.FullName.Split(' ')
+                    .Take(2).Select(w => w[0].ToString().ToUpper()));
+    var age = DateTime.Today.Year - Model.DateOfBirth.Year;
+    if (Model.DateOfBirth.Date > DateTime.Today.AddYears(-age)) age--;
+    var isFemale = Model.Gender?.ToLower() == "female";
+    var avatarStyle = isFemale
+        ? "background:#FDF2F8; color:#9D174D;"
+        : "background:var(--color-primary-light); color:var(--color-primary-dark);";
+
+    // MOVE THIS HERE — top-level scope, accessible everywhere in the view
+    var apptCount = Model.Appointments?.Count() ?? 0;
+    var hasAppointments = apptCount > 0;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Delete Patient</h1>
+        <p>This action cannot be undone</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="delete-card">
+    <div class="delete-card-header">
+        <div class="delete-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+            <div class="delete-card-title">Delete "@Model.FullName"?</div>
+            <div class="delete-card-subtitle">This patient record will be permanently removed</div>
+        </div>
+    </div>
+
+    <div class="delete-body">
+        <!-- Patient mini profile -->
+        <div style="display:flex; align-items:center; gap:12px; padding:16px 24px; border-bottom:1px solid var(--color-border); background:var(--color-surface-2);">
+            <div style="width:44px; height:44px; border-radius:50%; @avatarStyle display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; flex-shrink:0;">
+                @initials
+            </div>
+            <div>
+                <div style="font-weight:600; font-size:14px;">@Model.FullName</div>
+                <div style="font-size:12px; color:var(--color-text-3);">
+                    @Model.Gender · @age years · @Model.PhoneNumber
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Date of Birth</div>
+            <div class="detail-value">@Model.DateOfBirth.ToString("MMM dd, yyyy")</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Phone Number</div>
+            <div class="detail-value" style="font-family:var(--font-mono);">@Model.PhoneNumber</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Medical Record</div>
+            <div class="detail-value">
+                @if (Model.MedicalRecord != null)
+                {
+                    <span class="badge-status badge-cancelled">
+                        Will also be removed
+                    </span>
+                }
+                else
+                {
+                    <span class="badge-status badge-confirmed">None</span>
+                }
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Appointments</div>
+            <div class="detail-value">
+                @if (apptCount > 0)
+                {
+                    <span class="badge-status badge-pending">@apptCount appointment(s) linked</span>
+                }
+                else
+                {
+                    <span class="badge-status badge-confirmed">None</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="delete-footer">
+
+        @if (hasAppointments)
+        {
+            <div style="margin:16px 24px; padding:12px 14px;
+                background:var(--color-danger-bg);
+                border:1px solid #FECACA;
+                border-radius:var(--radius-md);
+                font-size:13px;
+                color:var(--color-danger-text);">
+                <i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>
+                This patient cannot be deleted because they have
+                <strong>@apptCount appointment(s)</strong> linked.
+                Please remove all appointments first.
+            </div>
+        }
+
+        @if (!hasAppointments)
+        {
+            <form asp-action="Delete" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.PatientId" />
+                <button type="submit" class="btn-danger-med">
+                    <i class="fa-solid fa-trash"></i> Yes, Delete
+                </button>
+            </form>
+        }
+
+        <a href="javascript:history.back()" class="btn-secondary-med">
+            <i class="fa-solid fa-xmark"></i> Cancel
+        </a>
+
+    </div>
+</div>

@@ -1,0 +1,194 @@
+﻿@model Medical_Center_Management_System.Models.MedicalRecord
+
+@{
+    ViewData["Title"] = "Add Medical Record";
+    bool fromPatient = ViewBag.FromPatient == true;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Add Medical Record</h1>
+        @if (fromPatient)
+        {
+            <p>Creating record for <strong>@ViewBag.PatientName</strong></p>
+        }
+        else
+        {
+            <p>Create a new medical record for a patient</p>
+        }
+    </div>
+    @if (fromPatient)
+    {
+        <a href="/Patients/Details/@ViewBag.PatientId" class="btn-secondary-med">
+            <i class="fa-solid fa-arrow-left"></i> Back to Patient
+        </a>
+    }
+    else
+    {
+        <a href="javascript:history.back()" class="btn-secondary-med">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+    }
+</div>
+
+@if (fromPatient)
+{
+    <!-- Patient info banner -->
+    <div style="background:var(--color-primary-light); border:1px solid #A7E8CF; border-radius:var(--radius-lg); padding:14px 20px; margin-bottom:20px; display:flex; align-items:center; gap:14px;">
+        <div style="width:40px; height:40px; border-radius:50%; background:var(--color-primary); color:white; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; flex-shrink:0;">
+            @(((string)ViewBag.PatientName)?.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()).Aggregate("", (a, b) => a + b))
+        </div>
+        <div>
+            <div style="font-weight:600; color:var(--color-primary-dark); font-size:14px;">@ViewBag.PatientName</div>
+            <div style="font-size:12px; color:var(--color-primary); margin-top:2px; font-family:var(--font-mono);">@ViewBag.PatientPhone</div>
+        </div>
+        <div style="margin-left:auto;">
+            <span class="badge-status badge-confirmed">
+                <i class="fa-solid fa-link" style="font-size:10px;"></i> Record will be linked automatically
+            </span>
+        </div>
+    </div>
+}
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors" style="max-width:720px; margin-bottom:16px;"></div>
+
+    @if (fromPatient)
+    {
+        <!-- Hidden — auto filled -->
+        <input type="hidden" name="PatientId" value="@ViewBag.PatientId" />
+    }
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:720px;">
+
+        <!-- LEFT: Core Info -->
+        <div class="form-card" style="max-width:unset;">
+            <div class="form-card-header">
+                <h2><i class="fa-solid fa-heart-pulse" style="color:var(--color-primary); margin-right:8px;"></i>Core Info</h2>
+                <p>Basic health measurements</p>
+            </div>
+            <div class="form-card-body">
+
+                @if (!fromPatient)
+                {
+                    <div class="form-group-med">
+                        <label asp-for="PatientId">Patient</label>
+                        <select asp-for="PatientId" class="form-control-med" asp-items="ViewBag.PatientId">
+                            <option value="">— Select patient —</option>
+                        </select>
+                        <span asp-validation-for="PatientId" class="field-validation-error"></span>
+                    </div>
+                }
+
+                <div class="form-group-med">
+                    <label asp-for="BloodType">Blood Type</label>
+                    <select asp-for="BloodType" class="form-control-med">
+                        <option value="">— Select —</option>
+                        @foreach (var bt in new[] { "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-" })
+                        {
+                            <option value="@bt">@bt</option>
+                        }
+                    </select>
+                    <span asp-validation-for="BloodType" class="field-validation-error"></span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="form-group-med">
+                        <label asp-for="Height">Height (cm)</label>
+                        <input asp-for="Height" class="form-control-med" type="number" step="0.1" placeholder="e.g. 175" />
+                        <span asp-validation-for="Height" class="field-validation-error"></span>
+                    </div>
+                    <div class="form-group-med">
+                        <label asp-for="Weight">Weight (kg)</label>
+                        <input asp-for="Weight" class="form-control-med" type="number" step="0.1" placeholder="e.g. 70" />
+                        <span asp-validation-for="Weight" class="field-validation-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-group-med">
+                    <label asp-for="CurrentMedications">Current Medications</label>
+                    <textarea asp-for="CurrentMedications" class="form-control-med" rows="3"
+                              placeholder="List current medications..."></textarea>
+                    <span asp-validation-for="CurrentMedications" class="field-validation-error"></span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: Conditions -->
+        <div class="form-card" style="max-width:unset;">
+            <div class="form-card-header">
+                <h2><i class="fa-solid fa-triangle-exclamation" style="color:#EF4444; margin-right:8px;"></i>Conditions & Flags</h2>
+                <p>Chronic conditions and allergy info</p>
+            </div>
+            <div class="form-card-body">
+
+                <div style="background:var(--color-surface-2); border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
+                    <div style="font-size:12px; font-weight:600; color:var(--color-text-3); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">Chronic Conditions</div>
+                    <div class="form-check-med">
+                        <input asp-for="HasDiabetes" type="checkbox" />
+                        <label asp-for="HasDiabetes">Diabetes</label>
+                    </div>
+                    <div class="form-check-med">
+                        <input asp-for="HasHypertension" type="checkbox" />
+                        <label asp-for="HasHypertension">Hypertension</label>
+                    </div>
+                    <div class="form-check-med">
+                        <input asp-for="HasHeartDisease" type="checkbox" />
+                        <label asp-for="HasHeartDisease">Heart Disease</label>
+                    </div>
+                </div>
+
+                <div style="background:var(--color-surface-2); border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
+                    <div class="form-check-med" style="margin-bottom:10px;">
+                        <input asp-for="HasAllergies" type="checkbox" id="hasAllergiesCheck" />
+                        <label asp-for="HasAllergies" style="font-weight:600;">Has Allergies</label>
+                    </div>
+                    <div id="allergyDetailsGroup">
+                        <div class="form-group-med" style="margin-bottom:0;">
+                            <label asp-for="AllergyDetails">Allergy Details</label>
+                            <textarea asp-for="AllergyDetails" class="form-control-med" rows="3"
+                                      placeholder="Describe allergies in detail..."></textarea>
+                            <span asp-validation-for="AllergyDetails" class="field-validation-error"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group-med">
+                    <label asp-for="ChronicDiseasesNotes">Chronic Disease Notes</label>
+                    <textarea asp-for="ChronicDiseasesNotes" class="form-control-med" rows="3"
+                              placeholder="Additional notes about chronic conditions..."></textarea>
+                    <span asp-validation-for="ChronicDiseasesNotes" class="field-validation-error"></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div style="max-width:720px; margin-top:16px; display:flex; gap:10px;">
+        <button type="submit" class="btn-primary-med">
+            <i class="fa-solid fa-floppy-disk"></i> Save & Return to Patient
+        </button>
+        @if (fromPatient)
+        {
+            <a href="/Patients/Details/@ViewBag.PatientId" class="btn-secondary-med">Cancel</a>
+        }
+        else
+        {
+            <a href="javascript:history.back()" class="btn-secondary-med">Cancel</a>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        const check = document.getElementById('hasAllergiesCheck');
+        const group = document.getElementById('allergyDetailsGroup');
+        function toggleAllergy() { group.style.display = check.checked ? 'block' : 'none'; }
+        check.addEventListener('change', toggleAllergy);
+        toggleAllergy();
+    </script>
+}

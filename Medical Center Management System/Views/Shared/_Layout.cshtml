@@ -1,0 +1,294 @@
+﻿@if (TempData["Error"] != null)
+{
+    <div class="alert-toast alert-toast-error">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>@TempData["Error"]</span>
+        <button class="alert-close" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Medix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    <div class="app-shell">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-mark">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <span class="logo-text">Medix</span>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                @* ======================================= *@
+                @* ADMIN NAV                              *@
+                @* ======================================= *@
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="nav-section-label">Overview</div>
+
+                    <a href="/" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+
+                    <div class="nav-section-label">Management</div>
+
+                    <a asp-controller="Specialties"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Specialties" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-stethoscope"></i></span>
+                        <span class="nav-label">Specialties</span>
+                    </a>
+
+                    <a asp-controller="Clinics"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Clinics" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-hospital"></i></span>
+                        <span class="nav-label">Clinics</span>
+                    </a>
+
+                    <a asp-controller="Doctors"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Doctors" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-user-doctor"></i></span>
+                        <span class="nav-label">Doctors</span>
+                    </a>
+
+                    <a asp-controller="Patients"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Patients" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
+                        <span class="nav-label">Patients</span>
+                    </a>
+
+                    <div class="nav-section-label">Clinical</div>
+
+                    <a asp-controller="Appointments"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Appointments" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                        <span class="nav-label">Appointments</span>
+                    </a>
+
+                    <a asp-controller="Histories"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Histories" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                        <span class="nav-label">Histories</span>
+                    </a>
+
+                    <div class="nav-section-label">System</div>
+
+                    <a asp-controller="UserManagement"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-users-gear"></i></span>
+                        <span class="nav-label">User Management</span>
+                    </a>
+                }
+
+                @* ======================================= *@
+                @* DOCTOR NAV                             *@
+                @* ======================================= *@
+
+                @if (User.IsInRole("Doctor"))
+                {
+                    <div class="nav-section-label">My Practice</div>
+
+                    <a asp-controller="DoctorPortal"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "DoctorPortal" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+
+                    <a asp-controller="DoctorPortal"
+                       asp-action="Profile" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Profile" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-user-doctor"></i></span>
+                        <span class="nav-label">My Profile</span>
+                    </a>
+
+                    <a asp-controller="DoctorPortal"
+                       asp-action="MyAppointments" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAppointments" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                        <span class="nav-label">My Appointments</span>
+                    </a>
+                    
+
+                    
+                }
+
+                @* ======================================= *@
+                @* PATIENT NAV                            *@
+                @* ======================================= *@
+
+                @if (User.IsInRole("Patient"))
+                {
+                    <div class="nav-section-label">My Health</div>
+
+                    <a asp-controller="PatientPortal"
+                       asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "PatientPortal" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+
+                    <a asp-controller="PatientPortal"
+                       asp-action="Profile" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Profile" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
+                        <span class="nav-label">My Profile</span>
+                    </a>
+
+                    <a asp-controller="PatientPortal"
+                       asp-action="AvailableSlots" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "AvailableSlots" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-calendar-plus"></i></span>
+                        <span class="nav-label">Available Slots</span>
+                    </a>
+
+                    <a asp-controller="PatientPortal"
+                       asp-action="MyAppointments" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAppointments" ? "active" : "")">
+                        <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                        <span class="nav-label">My Appointments</span>
+                    </a>
+
+                }
+
+            </nav>
+
+            <!-- Sidebar footer: user info + logout -->
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="user-avatar">
+                        @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "?")
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">@User.Identity?.Name</div>
+                        <div class="user-role">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <text>System Administrator</text>
+                            }
+                            @if (User.IsInRole("Doctor"))
+                            {
+                                <text>Doctor</text>
+                            }
+                            @if (User.IsInRole("Patient"))
+                            {
+                                <text>Patient</text>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logout button -->
+                <form asp-action="Logout" asp-controller="Auth" method="post"
+                      style="margin-top:10px;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit"
+                            style="width:100%; background:none; border:1px solid var(--color-border);
+                        border-radius:var(--radius-md); padding:7px 12px; cursor:pointer;
+                        font-size:12.5px; color:var(--color-text-3); display:flex;
+                        align-items:center; gap:8px; transition:all var(--transition);"
+                            onmouseover="this.style.background='#FEF2F2'; this.style.color='#EF4444'; this.style.borderColor='#FECACA';"
+                            onmouseout="this.style.background='none'; this.style.color='var(--color-text-3)'; this.style.borderColor='var(--color-border)';">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- MAIN AREA -->
+        <div class="main-area">
+
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb-area">
+                        <span class="page-title">@(ViewData["Title"] ?? "Dashboard")</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="topbar-date">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span id="topbar-date-text"></span>
+                    </div>
+                    <div class="topbar-divider"></div>
+                    <div class="topbar-avatar">
+                        @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "?")
+                    </div>
+                </div>
+            </header>
+
+            <!-- ALERTS -->
+            <div class="alerts-area">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert-toast alert-toast-success">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>@TempData["Success"]</span>
+                        <button class="alert-close" onclick="this.parentElement.remove()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert-toast alert-toast-error">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>@TempData["Error"]</span>
+                        <button class="alert-close" onclick="this.parentElement.remove()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                }
+            </div>
+
+            <!-- PAGE CONTENT -->
+            <main class="page-content">
+                @RenderBody()
+            </main>
+
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        const d = new Date();
+        const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('topbar-date-text').textContent =
+        d.toLocaleDateString('en-US', opts);
+
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.getElementById('sidebarToggle');
+        toggle.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        document.querySelector('.main-area').classList.toggle('sidebar-collapsed');
+        });
+
+        setTimeout(() => {
+        document.querySelectorAll('.alert-toast').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-8px)';
+        setTimeout(() => el.remove(), 300);
+        });
+        }, 4000);
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

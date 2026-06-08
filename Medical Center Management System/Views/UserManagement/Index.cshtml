@@ -1,0 +1,226 @@
+﻿@model Medical_Center_Management_System.ViewModels.PaginatedList<Medical_Center_Management_System.Controllers.UserWithRolesVM>
+
+@{
+    ViewData["Title"] = "User Management";
+    var search = ViewBag.Search as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>User Management</h1>
+        <p>Manage system accounts and role assignments</p>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="data-table-wrapper" style="margin-bottom:16px;">
+    <form asp-action="Index" method="get">
+        <div class="data-table-toolbar">
+            <div class="search-box" style="flex:1; min-width:240px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" value="@search"
+                       placeholder="Search by name or email..." />
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn-primary-med">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
+                @if (!string.IsNullOrEmpty(search))
+                {
+                    <a asp-action="Index" class="btn-secondary-med">
+                        <i class="fa-solid fa-xmark"></i> Clear
+                    </a>
+                }
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="data-table-wrapper">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--color-border);">
+        <span style="font-size:12.5px; color:var(--color-text-3);">
+            <strong style="color:var(--color-text-1);">@Model.TotalItems</strong> users
+        </span>
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Linked Record</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = ((Model.PageIndex - 1) * Model.PageSize) + 1;
+                }
+                @foreach (var item in Model)
+                {
+                    var user = item.User;
+                    var roles = item.Roles;
+                    var initials = user.FullName.Split(' ')
+                    .Take(2)
+                    .Select(w => w[0].ToString().ToUpper())
+                    .Aggregate("", (a, b) => a + b);
+
+                    var roleBadge = roles.FirstOrDefault() switch
+                    {
+                        "Admin" => "badge-confirmed",
+                        "Doctor" => "badge-completed",
+                        "Patient" => "badge-pending",
+                        _ => "badge-pending"
+                    };
+
+                    <tr>
+                        <td style="color:var(--color-text-3); font-size:12px;">@i</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:34px; height:34px; border-radius:50%;
+                                            background:var(--color-primary-light);
+                                            color:var(--color-primary-dark);
+                                            display:flex; align-items:center;
+                                            justify-content:center;
+                                            font-size:12px; font-weight:600; flex-shrink:0;">
+                                    @initials
+                                </div>
+                                <div style="font-weight:500; font-size:13px;">
+                                    @user.FullName
+                                </div>
+                            </div>
+                        </td>
+                        <td style="font-size:13px; color:var(--color-text-2);">
+                            @user.Email
+                        </td>
+                        <td style="font-family:var(--font-mono); font-size:12.5px;">
+                            @(user.PhoneNumber ?? "—")
+                        </td>
+                        <td>
+                            @if (roles.Any())
+                            {
+                                foreach (var role in roles)
+                                {
+                                    <span class="badge-status @roleBadge">@role</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-pending">No Role</span>
+                            }
+                        </td>
+                        <td style="font-size:12.5px; color:var(--color-text-2);">
+                            @if (user.PatientId.HasValue)
+                            {
+                                <span>
+                                    <i class="fa-solid fa-user" style="color:var(--color-text-3); margin-right:4px;"></i>
+                                    Patient #@user.PatientId
+                                </span>
+                            }
+                            else if (user.DoctorId.HasValue)
+                            {
+                                <span>
+                                    <i class="fa-solid fa-user-doctor" style="color:var(--color-text-3); margin-right:4px;"></i>
+                                    Doctor #@user.DoctorId
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="color:var(--color-text-3);">—</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                @if (!roles.Contains("Admin"))
+                                {
+                                    <a asp-action="AssignDoctor"
+                                       asp-route-userId="@user.Id"
+                                       class="btn-action btn-action-edit"
+                                       title="Assign Doctor role">
+                                        <i class="fa-solid fa-user-doctor"></i> Make Doctor
+                                    </a>
+
+                                    <form asp-action="DeleteUser" method="post"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Delete user @user.FullName? This cannot be undone.');">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn-action btn-action-delete"
+                                                title="Delete user">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span style="font-size:12px; color:var(--color-text-3);">
+                                        Protected
+                                    </span>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+        </table>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:18px;">
+
+                @if (Model.HasPreviousPage)
+                {
+                    <a class="btn-secondary-med"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex - 1)"
+                       asp-route-search="@Context.Request.Query["search"]">
+                        Previous
+                    </a>
+                }
+                else
+                {
+                    <span class="btn-secondary-med" style="opacity:0.5; pointer-events:none;">
+                        Previous
+                    </span>
+                }
+
+                <span style="font-size:14px; color:var(--color-text-2);">
+                    Page @Model.PageIndex of @Model.TotalPages
+                </span>
+
+                @if (Model.HasNextPage)
+                {
+                    <a class="btn-secondary-med"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex + 1)"
+                       asp-route-search="@Context.Request.Query["search"]">
+                        Next
+                    </a>
+                }
+                else
+                {
+                    <span class="btn-secondary-med" style="opacity:0.5; pointer-events:none;">
+                        Next
+                    </span>
+                }
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
+            <h3>No users found</h3>
+            <p>@(string.IsNullOrEmpty(search) ? "No user accounts exist yet." : $"No users match \"{search}\".")</p>
+        </div>
+    }
+</div>

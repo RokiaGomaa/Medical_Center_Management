@@ -1,0 +1,103 @@
+﻿@model Medical_Center_Management_System.Models.Clinic
+
+@{
+    ViewData["Title"] = "Delete Clinic";
+    bool hasRelated = Model.Doctors.Any() || Model.Appointments.Any();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Delete Clinic</h1>
+        <p>This action cannot be undone</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back 
+    </a>
+</div>
+
+<div class="delete-card">
+    <div class="delete-card-header">
+        <div class="delete-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+            <div class="delete-card-title">Delete "@Model.Name"?</div>
+            <div class="delete-card-subtitle">This clinic will be permanently removed from the system</div>
+        </div>
+    </div>
+
+    <div class="delete-body">
+        <div class="detail-row">
+            <div class="detail-label">Clinic Name</div>
+            <div class="detail-value" style="font-weight:500;">@Model.Name</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Address</div>
+            <div class="detail-value">@Model.Address</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Phone</div>
+            <div class="detail-value" style="font-family:var(--font-mono);">@Model.PhoneNumber</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Working Hours</div>
+            <div class="detail-value">
+                @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Linked Doctors</div>
+            <div class="detail-value">
+                @if (Model.Doctors.Any())
+                {
+                    <span class="badge-status badge-cancelled">
+                        @Model.Doctors.Count() doctor(s) linked
+                    </span>
+                }
+                else
+                {
+                    <span class="badge-status badge-confirmed">None</span>
+                }
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Linked Appointments</div>
+            <div class="detail-value">
+                @if (Model.Appointments.Any())
+                {
+                    <span class="badge-status badge-cancelled">
+                        @Model.Appointments.Count() appointment(s) linked
+                    </span>
+                }
+                else
+                {
+                    <span class="badge-status badge-confirmed">None</span>
+                }
+            </div>
+        </div>
+
+        @if (hasRelated)
+        {
+            <div style="margin:16px 24px; padding:12px 14px; background:var(--color-danger-bg); border:1px solid #FECACA; border-radius:var(--radius-md); font-size:13px; color:var(--color-danger-text);">
+                <i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>
+                This clinic cannot be deleted because it has linked doctors or appointments.
+                Please reassign or remove them first.
+            </div>
+        }
+    </div>
+
+    <div class="delete-footer">
+        @if (!hasRelated)
+        {
+            <form asp-action="Delete" method="post" style="display:inline;">
+                <input type="hidden" asp-for="ClinicId" />
+                <button type="submit" class="btn-danger-med">
+                    <i class="fa-solid fa-trash"></i> Yes, Delete
+                </button>
+            </form>
+        }
+        <a href="javascript:history.back()" class="btn-secondary-med">
+            <i class="fa-solid fa-xmark"></i> Cancel
+        </a>
+    </div>
+</div>

@@ -1,0 +1,253 @@
+﻿@model Medical_Center_Management_System.ViewModels.PaginatedList<Medical_Center_Management_System.Models.Clinic>
+
+@{
+    ViewData["Title"] = "Clinics";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Clinics</h1>
+        <p>Manage all clinic locations in the system</p>
+    </div>
+    <a asp-action="Create" class="btn-primary-med">
+        <i class="fa-solid fa-plus"></i> Add Clinic
+    </a>
+</div>
+
+
+
+<div class="data-table-wrapper">
+
+    <div class="data-table-toolbar" style="flex-wrap:wrap">
+        <!-- 🔥 FILTERS -->
+        <div class="data-table-wrapper">
+            <div class="data-table-toolbar" style="flex-wrap:wrap; gap:10px;">
+
+                <div class="search-box" style="flex:1; min-width:700px;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput"
+                           @* class="form-control-med" *@
+                           placeholder="Search clinics or doctors...">
+                </div>
+
+                <input type="number" id="minPrice"
+                       class="form-control-med"
+                       placeholder="Min Price"
+                       style="width:140px;" />
+
+                <input type="number" id="maxPrice"
+                       class="form-control-med"
+                       placeholder="Max Price"
+                       style="width:140px;" />
+            </div>
+        </div>
+
+    </div>
+
+    <div style="padding:12px 16px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:12.5px; color:var(--color-text-3);">
+                <span id="rowCount">@Model.TotalItems</span> clinics
+            </span>
+        </div>
+    </div>
+    @if (Model.Any())
+    {
+        <table class="data-table" id="clinicsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Clinic</th>
+                    <th>Phone</th>
+                    <th>Price</th>
+                    <th>Capacity</th>
+                    <th>Working Hours</th>
+                    <th>Doctors</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @{
+                    int i = ((Model.PageIndex - 1) * Model.PageSize) + 1;
+                }
+
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td style="color:var(--color-text-3); font-size:12px;">@i</td>
+
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:36px; height:36px; border-radius:8px; background:var(--color-primary-light); color:var(--color-primary); display:flex; align-items:center; justify-content:center;">
+                                    <i class="fa-solid fa-hospital"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:500;">@item.Name</div>
+                                    <div style="font-size:12px; color:var(--color-text-3);">@item.Address</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td style="font-family:var(--font-mono); font-size:13px;">
+                            @item.PhoneNumber
+                        </td>
+
+                        <td>
+                            <span style="font-weight:500; color:var(--color-primary);">
+                                @item.Price.ToString("C")
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge-status badge-confirmed">
+                                @item.MaxPatients max
+                            </span>
+                        </td>
+
+                        <td style="font-size:13px; color:var(--color-text-2);">
+                            <i class="fa-regular fa-clock"></i>
+                            @item.StartTime.ToString(@"hh\:mm") – @item.EndTime.ToString(@"hh\:mm")
+                        </td>
+
+                        <td>
+                            @if (item.Doctors.Any())
+                            {
+                                <span class="badge-status badge-confirmed">
+                                    @item.Doctors.Count() doctors
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-pending">No doctors</span>
+                            }
+                        </td>
+
+                        <td>
+                            <div class="table-actions">
+                                <a asp-action="Details" asp-route-id="@item.ClinicId"
+                                   class="btn-action btn-action-view">
+                                    View
+                                </a>
+
+                                <a asp-action="Edit" asp-route-id="@item.ClinicId"
+                                   class="btn-action btn-action-edit">
+                                    Edit
+                                </a>
+
+                                <a asp-action="Delete" asp-route-id="@item.ClinicId"
+                                   class="btn-action btn-action-delete">
+                                    Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+
+                    i++;
+                }
+            </tbody>
+        </table>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:18px;">
+
+                @if (Model.HasPreviousPage)
+                {
+                    <a class="btn-secondary-med"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex - 1)"
+                       asp-route-search="@Context.Request.Query["search"]"
+                       asp-route-minPrice="@Context.Request.Query["minPrice"]"
+                       asp-route-maxPrice="@Context.Request.Query["maxPrice"]">
+                        Previous
+                    </a>
+                }
+                else
+                {
+                    <span class="btn-secondary-med" style="opacity:0.5; pointer-events:none;">
+                        Previous
+                    </span>
+                }
+
+                <span style="font-size:14px; color:var(--color-text-2);">
+                    Page @Model.PageIndex of @Model.TotalPages
+                </span>
+
+                @if (Model.HasNextPage)
+                {
+                    <a class="btn-secondary-med"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex + 1)"
+                       asp-route-search="@Context.Request.Query["search"]"
+                       asp-route-minPrice="@Context.Request.Query["minPrice"]"
+                       asp-route-maxPrice="@Context.Request.Query["maxPrice"]">
+                        Next
+                    </a>
+                }
+                else
+                {
+                    <span class="btn-secondary-med" style="opacity:0.5; pointer-events:none;">
+                        Next
+                    </span>
+                }
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-hospital"></i></div>
+            <h3>No clinics found</h3>
+            <p>Get started by registering your first clinic.</p>
+            <a asp-action="Create" class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
+                <i class="fa-solid fa-plus"></i> Add Clinic
+            </a>
+        </div>
+    }
+</div>
+
+<!-- 🔥 SCRIPT FILTER -->
+@section Scripts {
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const minPrice = document.getElementById('minPrice');
+        const maxPrice = document.getElementById('maxPrice');
+
+        const rows = document.querySelectorAll('#clinicsTable tbody tr');
+        const count = document.getElementById('rowCount');
+
+        function filterTable() {
+
+            const search = searchInput.value.toLowerCase();
+            const min = parseFloat(minPrice.value) || 0;
+            const max = parseFloat(maxPrice.value) || Infinity;
+
+            let visible = 0;
+
+            rows.forEach(row => {
+
+                const textMatch = row.textContent.toLowerCase().includes(search);
+
+                const priceText = row.children[3].innerText.replace(/[^0-9.]/g, '');
+                const price = parseFloat(priceText) || 0;
+
+                const priceMatch = price >= min && price <= max;
+
+                const show = textMatch && priceMatch;
+
+                row.style.display = show ? '' : 'none';
+
+                if (show) visible++;
+            });
+
+            count.textContent = visible;
+        }
+
+        searchInput.addEventListener('input', filterTable);
+        minPrice.addEventListener('input', filterTable);
+        maxPrice.addEventListener('input', filterTable);
+    </script>
+}

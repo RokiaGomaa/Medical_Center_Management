@@ -1,0 +1,73 @@
+﻿@{
+    ViewData["Title"] = "Assign Doctor Role";
+    var user = ViewBag.User as Medical_Center_Management_System.Models.ApplicationUser;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Assign Doctor Role</h1>
+        <p>Link <strong>@user?.FullName</strong> to a doctor record</p>
+    </div>
+    <a asp-action="Index" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back to Users
+    </a>
+</div>
+
+<div class="form-card" style="max-width:480px;">
+    <div class="form-card-header">
+        <h2>
+            <i class="fa-solid fa-user-doctor"
+               style="color:var(--color-primary); margin-right:8px;"></i>
+            Role Assignment
+        </h2>
+        <p>Select which doctor record to link to this account</p>
+    </div>
+
+    <form asp-action="AssignDoctor" method="post">
+        <div class="form-card-body">
+
+            <input type="hidden" name="userId" value="@user?.Id" />
+
+            <!-- User info banner -->
+            <div style="background:var(--color-surface-2); border:1px solid var(--color-border);
+                border-radius:var(--radius-md); padding:14px 16px; margin-bottom:20px;
+                display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; border-radius:50%;
+                    background:var(--color-primary-light); color:var(--color-primary-dark);
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:14px; font-weight:600; flex-shrink:0;">
+                    @(user?.FullName?.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()).Aggregate("", (a, b) => a + b))
+                </div>
+                <div>
+                    <div style="font-weight:600; font-size:13.5px;">@user?.FullName</div>
+                    <div style="font-size:12px; color:var(--color-text-3);">@user?.Email</div>
+                </div>
+            </div>
+
+            <div class="form-group-med">
+                <label for="doctorId">Doctor Record</label>
+                <select name="doctorId" id="doctorId"
+                        class="form-control-med"
+                        asp-items="ViewBag.DoctorId">
+                    <option value="">— Select a doctor —</option>
+                </select>
+            </div>
+
+            <div style="padding:12px 14px; background:var(--color-info-bg);
+                border:1px solid #BFDBFE; border-radius:var(--radius-md);
+                font-size:13px; color:var(--color-info-text);">
+                <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
+                This will remove the Patient role (if assigned) and grant the Doctor role.
+                The user will be able to log in and access their appointments and patient records.
+            </div>
+
+        </div>
+
+        <div class="form-card-footer">
+            <button type="submit" class="btn-primary-med">
+                <i class="fa-solid fa-user-doctor"></i> Assign Doctor Role
+            </button>
+            <a href="javascript:history.back()" class="btn-secondary-med">Cancel</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,82 @@
+﻿@model Medical_Center_Management_System.Models.Doctor
+
+@{
+    ViewData["Title"] = "Edit Doctor";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Doctor</h1>
+        <p>Update details for <strong>@Model.FullName</strong></p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="form-card">
+    <div class="form-card-header">
+        <h2><i class="fa-solid fa-pen" style="color:var(--color-warning); margin-right:8px;"></i>Edit Doctor</h2>
+        <p>Modify the doctor's details below</p>
+    </div>
+
+    <form asp-action="Edit" method="post">
+        <div class="form-card-body">
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <input type="hidden" asp-for="DoctorId" />
+
+            <!-- Full Name -->
+            <div class="form-group-med">
+                <label asp-for="FullName">Full Name</label>
+                <input asp-for="FullName" class="form-control-med" />
+                <span asp-validation-for="FullName" class="field-validation-error"></span>
+            </div>
+
+            <!-- Phone & Experience -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group-med">
+                    <label asp-for="PhoneNumber">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control-med" />
+                    <span asp-validation-for="PhoneNumber" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="YearsOfExperience">Years of Experience</label>
+                    <input asp-for="YearsOfExperience" class="form-control-med" type="number" min="0" max="60" />
+                    <span asp-validation-for="YearsOfExperience" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Specialty & Clinic -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group-med">
+                    <label asp-for="SpecialtyId">Specialty</label>
+                    <select asp-for="SpecialtyId" class="form-control-med" asp-items="ViewBag.SpecialtyId">
+                        <option value="">— Select specialty —</option>
+                    </select>
+                    <span asp-validation-for="SpecialtyId" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="ClinicId">Clinic</label>
+                    <select asp-for="ClinicId" class="form-control-med" asp-items="ViewBag.ClinicId">
+                        <option value="">— Select clinic —</option>
+                    </select>
+                    <span asp-validation-for="ClinicId" class="field-validation-error"></span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="form-card-footer">
+            <button type="submit" class="btn-primary-med">
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+            </button>
+            <a href="javascript:history.back()" class="btn-secondary-med">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

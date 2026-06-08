@@ -1,0 +1,53 @@
+﻿@model Medical_Center_Management_System.Models.Specialty
+
+@{
+    ViewData["Title"] = "Delete Specialty";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Delete Specialty</h1>
+        <p>This action cannot be undone</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="delete-card">
+    <div class="delete-card-header">
+        <div class="delete-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+            <div class="delete-card-title">Delete "@Model.Name"?</div>
+            <div class="delete-card-subtitle">This specialty will be permanently removed</div>
+        </div>
+    </div>
+
+    <div class="delete-body">
+        <div class="detail-row">
+            <div class="detail-label">Specialty Name</div>
+            <div class="detail-value">@Model.Name</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Description</div>
+            <div class="detail-value">@Model.Description</div>
+        </div>
+       
+    </div>
+
+    <div class="delete-footer">
+        <form asp-action="Delete" method="post" style="display:inline;">
+            <input type="hidden" asp-for="SpecialtyId" />
+
+            <button type="submit" class="btn-danger-med">
+                <i class="fa-solid fa-trash"></i> Yes, Delete
+            </button>
+        </form>
+
+        <a href="javascript:history.back()" class="btn-secondary-med">
+            <i class="fa-solid fa-xmark"></i> Cancel
+        </a>
+    </div>
+</div>

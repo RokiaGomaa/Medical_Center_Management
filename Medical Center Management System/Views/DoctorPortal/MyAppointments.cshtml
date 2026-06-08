@@ -1,0 +1,165 @@
+﻿@model IEnumerable<Medical_Center_Management_System.Models.Appointment>
+
+@{
+    ViewData["Title"] = "My Appointments";
+    var statusFilter = ViewBag.StatusFilter as string;
+    var dateFilter = ViewBag.DateFilter as DateTime?;
+}
+
+<div class="page-header">
+    <div>
+        <h1>My Appointments</h1>
+        <p>Manage and update all your patient appointments</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="data-table-wrapper" style="margin-bottom:16px;">
+    <form asp-action="MyAppointments" method="get">
+        <div class="data-table-toolbar" style="flex-wrap:wrap; gap:10px;">
+            <select name="status" class="filter-select">
+                <option value="">All Statuses</option>
+                @foreach (var s in new[]
+                { "Pending","Confirmed","Completed","Cancelled","Needs Follow Up" })
+                {
+                    <option value="@s" selected="@(statusFilter == s)">@s</option>
+                }
+            </select>
+            <input type="date" name="date" class="form-control-med"
+                   value="@(dateFilter?.ToString("yyyy-MM-dd"))"
+                   style="width:180px;" />
+            <button type="submit" class="btn-primary-med">
+                <i class="fa-solid fa-filter"></i> Apply
+            </button>
+            @if (!string.IsNullOrEmpty(statusFilter) || dateFilter.HasValue)
+            {
+                <a asp-action="MyAppointments" class="btn-secondary-med">
+                    <i class="fa-solid fa-xmark"></i> Clear
+                </a>
+            }
+        </div>
+    </form>
+</div>
+
+<div class="data-table-wrapper">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--color-border);">
+        <span style="font-size:12.5px; color:var(--color-text-3);">
+            <strong style="color:var(--color-text-1);">@Model.Count()</strong> appointments
+        </span>
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Patient</th>
+                    <th>Status</th>
+                    <th>Update Status</th>
+                    <th>History</th>
+                    <th>Patient Profile</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appt in Model)
+                {
+                    var sc = appt.Status?.ToLower() switch
+                    {
+                        "confirmed" => "badge-confirmed",
+                        "pending" => "badge-pending",
+                        "cancelled" => "badge-cancelled",
+                        "completed" => "badge-completed",
+                        "needs follow up" => "badge-followup",
+                        _ => "badge-pending"
+                    };
+                    var isToday = appt.AppointmentDate.Date == DateTime.Today;
+
+                    <tr style="@(isToday ? "background:#F0FDF4;" : "")">
+                        <td>
+                            <div style="font-family:var(--font-mono); font-size:12.5px;">
+                                @appt.AppointmentDate.ToString("MMM dd, yyyy")
+                            </div>
+                            <div style="font-size:11.5px; color:var(--color-text-3);">
+                                @appt.AppointmentDate.ToString("HH:mm")
+                                @if (isToday)
+                                {
+                                    <span style="color:var(--color-primary); font-weight:600; margin-left:4px;">· Today</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight:500; font-size:13px;">
+                                @appt.Patient?.FullName
+                            </div>
+                            <div style="font-size:11.5px; color:var(--color-text-3);
+                                font-family:var(--font-mono);">
+                                @appt.Patient?.PhoneNumber
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-status @sc">@appt.Status</span>
+                        </td>
+                        <td>
+                            <!-- Quick status update form -->
+                            <form asp-action="UpdateStatus" method="post"
+                                  style="display:flex; gap:6px; align-items:center;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="appointmentId"
+                                       value="@appt.AppointmentId" />
+                                <select name="status" class="filter-select"
+                                        style="font-size:11.5px; padding:4px 8px;">
+                                    @foreach (var s in new[]
+                                    { "Pending","Confirmed","Completed",
+                                      "Cancelled","Needs Follow Up" })
+                                    {
+                                        <option value="@s"
+                                                selected="@(appt.Status == s)">@s</option>
+                                    }
+                                </select>
+                                <button type="submit"
+                                        class="btn-action btn-action-edit"
+                                        style="font-size:11px; padding:4px 10px;">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            @if (appt.History != null)
+                            {
+                                <a asp-action="WriteHistory"
+                                   asp-route-appointmentId="@appt.AppointmentId"
+                                   class="btn-action btn-action-edit" style="font-size:11px;">
+                                    <i class="fa-solid fa-pen"></i> Edit
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-action="WriteHistory"
+                                   asp-route-appointmentId="@appt.AppointmentId"
+                                   class="btn-action btn-action-view" style="font-size:11px;">
+                                    <i class="fa-solid fa-plus"></i> Add
+                                </a>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="PatientProfile"
+                               asp-route-patientId="@appt.PatientId"
+                               class="btn-action btn-action-view" style="font-size:11px;">
+                                <i class="fa-solid fa-user"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-regular fa-calendar-xmark"></i></div>
+            <h3>No appointments found</h3>
+            <p>Try adjusting your filters.</p>
+        </div>
+    }
+</div>

@@ -1,0 +1,85 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "Access Denied";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Access Denied — Medix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+            body {
+                background: var(--color-bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+            }
+
+            .denied-card {
+                background: var(--color-surface);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-xl);
+                padding: 48px 40px;
+                width: 100%;
+                max-width: 420px;
+                box-shadow: var(--shadow-md);
+                text-align: center;
+            }
+
+            .denied-icon {
+                width: 64px;
+                height: 64px;
+                background: #FEF2F2;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 24px;
+                font-size: 26px;
+                color: #EF4444;
+            }
+
+            .denied-title {
+                font-size: 20px;
+                font-weight: 700;
+                color: var(--color-text-1);
+                margin-bottom: 8px;
+            }
+
+            .denied-subtitle {
+                font-size: 13.5px;
+                color: var(--color-text-3);
+                line-height: 1.6;
+                margin-bottom: 28px;
+            }
+    </style>
+</head>
+<body>
+    <div class="denied-card">
+        <div class="denied-icon">
+            <i class="fa-solid fa-ban"></i>
+        </div>
+        <div class="denied-title">Access Denied</div>
+        <div class="denied-subtitle">
+            You don't have permission to view this page.
+            Please contact your administrator if you believe this is a mistake.
+        </div>
+        <a asp-action="Login" asp-controller="Auth" class="btn-primary-med"
+           style="justify-content:center; width:100%;">
+            <i class="fa-solid fa-right-to-bracket"></i> Back to Login
+        </a>
+        <a href="javascript:history.back()" class="btn-secondary-med" style="justify-content:center; width:100%;">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+    </div>
+</body>
+</html>

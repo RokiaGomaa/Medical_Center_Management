@@ -1,0 +1,227 @@
+﻿@model Medical_Center_Management_System.Models.History
+
+@{
+    ViewData["Title"] = "History Details";
+
+    var statusClass = Model.Status?.ToLower() switch
+    {
+        "stable" => "badge-confirmed",
+        "improved" => "badge-completed",
+        "recovered" => "badge-recovered",
+        "completed" => "badge-completed",
+        "needs follow up" => "badge-followup",
+        _ => "badge-pending"
+    };
+
+    var patientInitials = Model.Appointment?.Patient?.FullName != null
+        ? string.Join("", Model.Appointment.Patient.FullName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()))
+        : "?";
+
+    var doctorInitials = Model.Appointment?.Doctor?.FullName != null
+        ? string.Join("", Model.Appointment.Doctor.FullName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()))
+        : "?";
+
+    var isOverdue = Model.FollowUpDate.HasValue &&
+                    Model.FollowUpDate.Value.Date < DateTime.Today &&
+                    Model.Status?.ToLower() == "needs follow up";
+}
+
+<div class="page-header">
+    <div>
+        <h1>History Details</h1>
+        <p>Full clinical history record</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- Appointment header -->
+<div style="background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:16px; box-shadow:var(--shadow-sm);">
+    <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--color-text-3); margin-bottom:12px;">Appointment Info</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; flex-wrap:wrap;">
+
+        <!-- Patient -->
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:var(--color-primary-light); color:var(--color-primary-dark); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;">
+                @patientInitials
+            </div>
+            <div>
+                <div style="font-size:11px; color:var(--color-text-3);">Patient</div>
+                <div style="font-weight:600; font-size:13.5px;">@Model.Appointment?.Patient?.FullName</div>
+                <div style="font-size:11px; color:var(--color-text-3); font-family:var(--font-mono);">@Model.Appointment?.Patient?.PhoneNumber</div>
+            </div>
+        </div>
+
+        <!-- Doctor -->
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#EFF6FF; color:#1E40AF; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;">
+                @doctorInitials
+            </div>
+            <div>
+                <div style="font-size:11px; color:var(--color-text-3);">Doctor</div>
+                <div style="font-weight:600; font-size:13.5px;">@Model.Appointment?.Doctor?.FullName</div>
+                <div style="font-size:11px; color:var(--color-text-3);">@Model.Appointment?.Doctor?.Specialty?.Description</div>
+            </div>
+        </div>
+
+        <!-- Clinic & Date -->
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:40px; height:40px; border-radius:var(--radius-sm); background:var(--color-success-bg); color:var(--color-success-text); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;">
+                <i class="fa-solid fa-hospital"></i>
+            </div>
+            <div>
+                <div style="font-size:11px; color:var(--color-text-3);">Clinic</div>
+                <div style="font-weight:600; font-size:13.5px;">@Model.Appointment?.Clinic?.Name</div>
+                <div style="font-size:11px; color:var(--color-text-3); font-family:var(--font-mono);">
+                    @Model.Appointment?.AppointmentDate.ToString("MMM dd, yyyy HH:mm")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main history details -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+
+    <!-- Clinical Details -->
+    <div class="detail-card" style="max-width:unset;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon"><i class="fa-solid fa-stethoscope"></i></div>
+            <div>
+                <div class="detail-title">Clinical Details</div>
+                <div class="detail-subtitle">Diagnosis and treatment info</div>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Diagnosis</div>
+                <div class="detail-value" style="line-height:1.6;">@(Model.Diagnosis ?? "—")</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Treatment</div>
+                <div class="detail-value" style="line-height:1.6;">@(Model.Treatment ?? "—")</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Treatment Worked</div>
+                <div class="detail-value">
+                    <span class="badge-status @(Model.DidTreatmentWork ? "badge-confirmed" : "badge-cancelled")">
+                        @(Model.DidTreatmentWork ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">First Visit</div>
+                <div class="detail-value">
+                    <span class="badge-status @(Model.IsFirstVisit ? "badge-pending" : "badge-confirmed")">
+                        @(Model.IsFirstVisit ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Follow Up & Status -->
+    <div class="detail-card" style="max-width:unset;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon" style="background:#FFFBEB; color:#F59E0B;">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+                <div class="detail-title">Follow Up & Status</div>
+                <div class="detail-subtitle">Current status and next steps</div>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                    <span class="badge-status @statusClass">@(Model.Status ?? "—")</span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Follow Up Date</div>
+                <div class="detail-value">
+                    @if (Model.FollowUpDate.HasValue)
+                    {
+                        <span style="font-family:var(--font-mono); font-size:13px; @(isOverdue ? "color:var(--color-danger-text); font-weight:600;" : "")">
+                            @Model.FollowUpDate.Value.ToString("MMMM dd, yyyy")
+                        </span>
+                        @if (isOverdue)
+                        {
+                            <span class="badge-status badge-cancelled" style="margin-left:8px; font-size:10.5px;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Overdue
+                            </span>
+                        }
+                        else if (Model.FollowUpDate.Value.Date >= DateTime.Today)
+                        {
+                            var daysLeft = (Model.FollowUpDate.Value.Date - DateTime.Today).Days;
+                            <span class="badge-status badge-pending" style="margin-left:8px; font-size:10.5px;">
+                                in @daysLeft day(s)
+                            </span>
+                        }
+                    }
+                    else
+                    {
+                        <span style="color:var(--color-text-3);">No follow-up scheduled</span>
+                    }
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Appointment Status</div>
+                <div class="detail-value">
+                    @{
+                        var apptClass = Model.Appointment?.Status?.ToLower() switch
+                        {
+                            "confirmed" => "badge-confirmed",
+                            "pending" => "badge-pending",
+                            "cancelled" => "badge-cancelled",
+                            "completed" => "badge-completed",
+                            "needs follow up" => "badge-followup",
+                            _ => "badge-pending"
+                        };
+                    }
+                    <span class="badge-status @apptClass">@Model.Appointment?.Status</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Doctor Notes -->
+@if (!string.IsNullOrWhiteSpace(Model.DoctorNotes))
+{
+    <div class="detail-card" style="max-width:unset; margin-bottom:16px;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon" style="background:#EFF6FF; color:#1E40AF;">
+                <i class="fa-solid fa-note-sticky"></i>
+            </div>
+            <div>
+                <div class="detail-title">Doctor Notes</div>
+                <div class="detail-subtitle">Additional observations from the physician</div>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Notes</div>
+                <div class="detail-value" style="line-height:1.7;">@Model.DoctorNotes</div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Footer actions -->
+<div style="display:flex; gap:10px;">
+    <a asp-action="Edit" asp-route-id="@Model.HistoryId" class="btn-primary-med">
+        <i class="fa-solid fa-pen"></i> Edit
+    </a>
+    @if (Model.Appointment?.Patient != null)
+    {
+        <a href="/Patients/Details/@Model.Appointment.Patient.PatientId" class="btn-secondary-med">
+            <i class="fa-solid fa-user"></i> Patient Profile
+        </a>
+    }
+    <a asp-action="Delete" asp-route-id="@Model.HistoryId" class="btn-danger-med">
+        <i class="fa-solid fa-trash"></i> Delete
+    </a>
+</div>

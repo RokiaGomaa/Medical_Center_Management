@@ -1,0 +1,195 @@
+﻿@model Medical_Center_Management_System.Models.History
+
+@{
+    ViewData["Title"] = "Write Clinical History";
+    var appointment = ViewBag.Appointment as Medical_Center_Management_System.Models.Appointment;
+    bool isEdit = Model.HistoryId != 0;
+}
+
+<div class="page-header">
+    <div>
+        <h1>@(isEdit ? "Edit" : "Write") Clinical History</h1>
+        <p>@(isEdit ? "Update the existing" : "Record a new") history entry for this appointment</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back to Appointments
+    </a>
+</div>
+
+<!-- Appointment context banner -->
+@if (appointment != null)
+{
+    <div style="background:var(--color-primary-light); border:1px solid #A7E8CF;
+        border-radius:var(--radius-lg); padding:14px 20px; margin-bottom:20px;
+        display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+
+        <!-- Patient initials -->
+        <div style="width:44px; height:44px; border-radius:50%;
+            background:var(--color-primary); color:white;
+            display:flex; align-items:center; justify-content:center;
+            font-size:15px; font-weight:700; flex-shrink:0;">
+            @(string.Join("", (appointment.Patient?.FullName ?? "?")
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Take(2).Select(w => w[0].ToString().ToUpper())))
+        </div>
+
+        <div style="flex:1;">
+            <div style="font-weight:600; color:var(--color-primary-dark); font-size:14px;">
+                @appointment.Patient?.FullName
+            </div>
+            <div style="font-size:12px; color:var(--color-primary); margin-top:3px;
+                display:flex; gap:14px; flex-wrap:wrap;">
+                <span>
+                    <i class="fa-regular fa-calendar" style="margin-right:4px;"></i>
+                    @appointment.AppointmentDate.ToString("dddd, MMMM dd yyyy · HH:mm")
+                </span>
+                <span>
+                    <i class="fa-solid fa-hospital" style="margin-right:4px;"></i>
+                    @appointment.Clinic?.Name
+                </span>
+                <span style="font-family:var(--font-mono);">
+                    @appointment.Patient?.PhoneNumber
+                </span>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+            <span class="badge-status @(isEdit ? "badge-completed" : "badge-pending")"
+                  style="font-size:11px;">
+                @(isEdit ? "Editing existing record" : "New record")
+            </span>
+            <span style="font-size:11px; color:var(--color-primary);">
+                Appointment #@appointment.AppointmentId
+            </span>
+        </div>
+
+    </div>
+}
+
+<!-- Form -->
+<div class="form-card" style="max-width:740px;">
+    <div class="form-card-header">
+        <h2>
+            <i class="fa-solid fa-clock-rotate-left"
+               style="color:var(--color-primary); margin-right:8px;"></i>
+            Clinical History
+        </h2>
+        <p>Fill in the diagnosis, treatment and follow-up details</p>
+    </div>
+
+    <form asp-action="WriteHistory" method="post">
+        <div class="form-card-body">
+
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <!-- Hidden fields — required by controller -->
+            <input type="hidden" asp-for="HistoryId" />
+            <input type="hidden" asp-for="AppointmentId" />
+
+            <!-- ======================== -->
+            <!-- Diagnosis & Treatment    -->
+            <!-- ======================== -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group-med">
+                    <label asp-for="Diagnosis">
+                        Diagnosis
+                        <span style="font-size:11px; color:var(--color-text-3); font-weight:400;">(optional)</span>
+                    </label>
+                    <textarea asp-for="Diagnosis" class="form-control-med" rows="4"
+                              placeholder="Describe the diagnosis in detail..."></textarea>
+                    <span asp-validation-for="Diagnosis" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="Treatment">
+                        Treatment
+                        <span style="font-size:11px; color:var(--color-text-3); font-weight:400;">(optional)</span>
+                    </label>
+                    <textarea asp-for="Treatment" class="form-control-med" rows="4"
+                              placeholder="Describe the prescribed treatment..."></textarea>
+                    <span asp-validation-for="Treatment" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <!-- ======================== -->
+            <!-- Doctor Notes             -->
+            <!-- ======================== -->
+            <div class="form-group-med">
+                <label asp-for="DoctorNotes">
+                    Doctor Notes
+                    <span style="font-size:11px; color:var(--color-text-3); font-weight:400;">(optional)</span>
+                </label>
+                <textarea asp-for="DoctorNotes" class="form-control-med" rows="3"
+                          placeholder="Additional observations, recommendations..."></textarea>
+                <span asp-validation-for="DoctorNotes" class="field-validation-error"></span>
+            </div>
+
+            <!-- ======================== -->
+            <!-- Follow Up & Status       -->
+            <!-- ======================== -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group-med">
+                    <label asp-for="FollowUpDate">Follow Up Date</label>
+                    <input asp-for="FollowUpDate" class="form-control-med" type="date"
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="FollowUpDate" class="field-validation-error"></span>
+                    <div style="font-size:11.5px; color:var(--color-text-3); margin-top:4px;">
+                        Leave empty if no follow-up needed
+                    </div>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="Status">Patient Status</label>
+                    <select asp-for="Status" class="form-control-med">
+                        <option value="">— Select status —</option>
+                        <option value="Stable">Stable</option>
+                        <option value="Improved">Improved</option>
+                        <option value="Recovered">Recovered</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Needs Follow Up">Needs Follow Up</option>
+                    </select>
+                    <span asp-validation-for="Status" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <!-- ======================== -->
+            <!-- Checkboxes               -->
+            <!-- ======================== -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;
+                background:var(--color-surface-2); border-radius:var(--radius-md);
+                padding:16px; border:1px solid var(--color-border);">
+
+                <div class="form-check-med">
+                    <input asp-for="IsFirstVisit" type="checkbox" />
+                    <label asp-for="IsFirstVisit" style="font-size:13.5px;">
+                        This is the patient's first visit
+                    </label>
+                </div>
+
+                <div class="form-check-med">
+                    <input asp-for="DidTreatmentWork" type="checkbox" />
+                    <label asp-for="DidTreatmentWork" style="font-size:13.5px;">
+                        Treatment was effective
+                    </label>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="form-card-footer">
+            <button type="submit" class="btn-primary-med">
+                <i class="fa-solid fa-floppy-disk"></i>
+                @(isEdit ? "Save Changes" : "Save History")
+            </button>
+            <a href="javascript:history.back()" class="btn-secondary-med">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

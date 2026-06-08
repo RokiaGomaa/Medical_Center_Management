@@ -1,0 +1,55 @@
+﻿@model IEnumerable<dynamic>
+
+<h2>Available Appointments Today</h2>
+
+<form asp-action="Index" asp-controller="Appointments" method="get">
+    <button type="submit" class="btn btn-secondary mb-3">
+        Return to List
+    </button>
+</form>
+
+@foreach (var doctor in Model)
+{
+        <div class="mb-4">
+            <h3>👨‍⚕️ @doctor.DoctorName</h3>
+            <p>🏥 @doctor.ClinicName</p>
+
+        @if (doctor.Slots == null || doctor.Slots.Count == 0)
+        {
+                    <p class="text-danger">No available appointments</p>
+        }
+        else
+        {
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                    @foreach (var slot in doctor.Slots)
+                    {
+                                <tr>
+                                    <td>
+                                @(((DateTime)slot.Time).ToString("HH:mm"))
+                                    </td>
+
+                                    <td>
+                                        <a class="btn btn-primary"
+                                           asp-controller="Appointments"
+                                           asp-action="Create"
+                                           asp-route-doctorId="@slot.DoctorId"
+                                           asp-route-clinicId="@slot.ClinicId"
+                                           asp-route-dateTime="@slot.Time">
+                                            Add
+                                        </a>
+                                    </td>
+                                </tr>
+                    }
+                        </tbody>
+                    </table>
+        }
+        </div>
+}

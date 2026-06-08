@@ -1,0 +1,106 @@
+﻿@model Medical_Center_Management_System.Models.MedicalRecord
+
+@{
+    ViewData["Title"] = "Delete Medical Record";
+    var initials = Model.Patient?.FullName != null
+        ? string.Join("", Model.Patient.FullName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()))
+        : "?";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Delete Medical Record</h1>
+        <p>This action cannot be undone</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="delete-card">
+    <div class="delete-card-header">
+        <div class="delete-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+            <div class="delete-card-title">Delete medical record for "@Model.Patient?.FullName"?</div>
+            <div class="delete-card-subtitle">This medical record will be permanently removed</div>
+        </div>
+    </div>
+
+    <div class="delete-body">
+        <!-- Patient mini profile -->
+        <div style="display:flex; align-items:center; gap:12px; padding:16px 24px; border-bottom:1px solid var(--color-border); background:var(--color-surface-2);">
+            <div style="width:44px; height:44px; border-radius:50%; background:var(--color-primary-light); color:var(--color-primary-dark); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; flex-shrink:0;">
+                @initials
+            </div>
+            <div style="flex:1;">
+                <div style="font-weight:600; font-size:14px;">@Model.Patient?.FullName</div>
+                <div style="font-size:12px; color:var(--color-text-3);">@Model.Patient?.PhoneNumber</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:20px; font-weight:800; color:var(--color-danger-text);">@Model.BloodType</div>
+                <div style="font-size:10px; color:var(--color-text-3);">Blood Type</div>
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Blood Type</div>
+            <div class="detail-value" style="font-weight:700; color:var(--color-danger-text);">@Model.BloodType</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Conditions</div>
+            <div class="detail-value">
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    @if (!Model.HasDiabetes && !Model.HasHypertension && !Model.HasHeartDisease && !Model.HasAllergies)
+                    {
+                        <span class="badge-status badge-confirmed">None recorded</span>
+                    }
+                    else
+                    {
+                        @if (Model.HasDiabetes)
+                        {
+                            <span class="badge-status badge-cancelled">Diabetes</span>
+                        }
+                        @if (Model.HasHypertension)
+                        {
+                            <span class="badge-status badge-cancelled">Hypertension</span>
+                        }
+                        @if (Model.HasHeartDisease)
+                        {
+                            <span class="badge-status badge-cancelled">Heart Disease</span>
+                        }
+                        @if (Model.HasAllergies)
+                        {
+                            <span class="badge-status badge-pending">Allergies</span>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Height / Weight</div>
+            <div class="detail-value">
+                @(Model.Height.HasValue ? $"{Model.Height}cm" : "—")
+                /
+                @(Model.Weight.HasValue ? $"{Model.Weight}kg" : "—")
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Medications</div>
+            <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.CurrentMedications) ? "None" : Model.CurrentMedications)</div>
+        </div>
+    </div>
+
+    <div class="delete-footer">
+        <form asp-action="Delete" method="post" style="display:inline;">
+            <input type="hidden" asp-for="MedicalRecordId" />
+            <button type="submit" class="btn-danger-med">
+                <i class="fa-solid fa-trash"></i> Yes, Delete
+            </button>
+        </form>
+        <a href="javascript:history.back()" class="btn-secondary-med">
+            <i class="fa-solid fa-xmark"></i> Cancel
+        </a>
+    </div>
+</div>

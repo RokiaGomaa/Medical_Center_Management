@@ -1,0 +1,148 @@
+﻿@model Medical_Center_Management_System.Models.Patient
+
+@{
+    ViewData["Title"] = "My Dashboard";
+    var age = DateTime.Today.Year - Model.DateOfBirth.Year;
+    if (Model.DateOfBirth.Date > DateTime.Today.AddYears(-age)) age--;
+    var initials = string.Join("", Model.FullName.Split(' ')
+                    .Take(2).Select(w => w[0].ToString().ToUpper()));
+    var upcomingCount = Model.Appointments?
+        .Count(a => a.AppointmentDate >= DateTime.Now && a.Status != "Cancelled") ?? 0;
+    var totalCount = Model.Appointments?.Count() ?? 0;
+    var histories = Model.Appointments?
+        .Where(a => a.History != null).Select(a => a.History!).ToList()
+        ?? new();
+}
+
+<!-- Profile banner -->
+<div style="background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); padding:24px; margin-bottom:20px;
+    box-shadow:var(--shadow-sm); display:flex; align-items:center;
+    gap:20px; flex-wrap:wrap;">
+    <div style="width:60px; height:60px; border-radius:50%;
+        background:var(--color-primary-light); color:var(--color-primary-dark);
+        display:flex; align-items:center; justify-content:center;
+        font-size:22px; font-weight:700; flex-shrink:0;">
+        @initials
+    </div>
+    <div style="flex:1;">
+        <div style="font-size:19px; font-weight:700;">@Model.FullName</div>
+        <div style="font-size:13px; color:var(--color-text-3); margin-top:4px;">
+            <i class="fa-solid fa-phone" style="margin-right:4px;"></i>@Model.PhoneNumber
+            &nbsp;·&nbsp;
+            <i class="fa-solid fa-cake-candles" style="margin-right:4px;"></i>@age years old
+            &nbsp;·&nbsp; @Model.Gender
+        </div>
+    </div>
+    <a asp-action="AvailableSlots" class="btn-primary-med">
+        <i class="fa-solid fa-calendar-plus"></i> Book Appointment
+    </a>
+</div>
+
+<!-- Stat cards -->
+<div class="stat-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#EFF6FF; color:#3B82F6;">
+            <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div class="stat-card-label">Upcoming</div>
+        <div class="stat-card-value">@upcomingCount</div>
+        <div class="stat-card-sub">Scheduled appointments</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#E1F5EE; color:#1D9E75;">
+            <i class="fa-solid fa-calendar"></i>
+        </div>
+        <div class="stat-card-label">Total Appointments</div>
+        <div class="stat-card-value">@totalCount</div>
+        <div class="stat-card-sub">All time</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#FFFBEB; color:#F59E0B;">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <div class="stat-card-label">History Records</div>
+        <div class="stat-card-value">@histories.Count</div>
+        <div class="stat-card-sub">Clinical histories</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#FEF2F2; color:#EF4444;">
+            <i class="fa-solid fa-file-medical"></i>
+        </div>
+        <div class="stat-card-label">Medical Record</div>
+        <div class="stat-card-value">@(Model.MedicalRecord != null ? "✓" : "—")</div>
+        <div class="stat-card-sub">@(Model.MedicalRecord != null ? "On file" : "Not recorded")</div>
+    </div>
+</div>
+
+<!-- Recent appointments -->
+<div class="data-table-wrapper">
+    <div class="data-table-toolbar">
+        <div>
+            <div style="font-size:14px; font-weight:600;">Recent Appointments</div>
+            <div style="font-size:12px; color:var(--color-text-3);">Your latest visits</div>
+        </div>
+        <a asp-action="MyAppointments" class="btn-secondary-med">
+            View All <i class="fa-solid fa-arrow-right" style="font-size:11px;"></i>
+        </a>
+    </div>
+
+    @{
+        var recent = Model.Appointments?
+            .OrderByDescending(a => a.AppointmentDate)
+            .Take(5)
+            .ToList() ?? new();
+    }
+
+    @if (recent.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Doctor</th>
+                    <th>Clinic</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appt in recent)
+                {
+                    var sc = appt.Status?.ToLower() switch
+                    {
+                        "confirmed" => "badge-confirmed",
+                        "pending" => "badge-pending",
+                        "cancelled" => "badge-cancelled",
+                        "completed" => "badge-completed",
+                        "needs follow up" => "badge-followup",
+                        _ => "badge-pending"
+                    };
+                    <tr>
+                        <td style="font-family:var(--font-mono); font-size:12.5px;">
+                            @appt.AppointmentDate.ToString("MMM dd, yyyy HH:mm")
+                        </td>
+                        <td>@appt.Doctor?.FullName</td>
+                        <td>@appt.Clinic?.Name</td>
+                        <td><span class="badge-status @sc">@appt.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-regular fa-calendar-xmark"></i></div>
+            <h3>No appointments yet</h3>
+            <p>Book your first appointment to get started.</p>
+            <a asp-action="AvailableSlots"
+               class="btn-primary-med"
+               style="margin-top:14px; display:inline-flex;">
+                <i class="fa-solid fa-calendar-plus"></i> Book Now
+            </a>
+        </div>
+    }
+</div>

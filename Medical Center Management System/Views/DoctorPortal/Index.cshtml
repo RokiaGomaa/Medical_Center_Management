@@ -1,0 +1,169 @@
+﻿@model Medical_Center_Management_System.Models.Doctor
+
+@{
+    ViewData["Title"] = "Doctor Dashboard";
+    var initials = string.Join("", Model.FullName.Split(' ')
+                    .Take(2).Select(w => w[0].ToString().ToUpper()));
+    var todayAppts = Model.Appointments?
+        .Where(a => a.AppointmentDate.Date == DateTime.Today)
+        .OrderBy(a => a.AppointmentDate)
+        .ToList() ?? new();
+}
+
+<!-- Profile banner -->
+<div style="background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); padding:24px; margin-bottom:20px;
+    box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+    <div style="width:60px; height:60px; border-radius:50%;
+        background:#EFF6FF; color:#1E40AF;
+        display:flex; align-items:center; justify-content:center;
+        font-size:22px; font-weight:700; flex-shrink:0;">
+        @initials
+    </div>
+    <div style="flex:1;">
+        <div style="font-size:19px; font-weight:700;">@Model.FullName</div>
+        <div style="font-size:13px; color:var(--color-text-3); margin-top:4px;">
+            <span class="badge-status badge-completed">
+                <i class="fa-solid fa-stethoscope" style="font-size:10px;"></i>
+                @Model.Specialty?.Description
+            </span>
+            &nbsp;·&nbsp;
+            <i class="fa-solid fa-hospital" style="margin-right:4px;"></i>@Model.Clinic?.Name
+            &nbsp;·&nbsp;
+            @Model.YearsOfExperience yrs experience
+        </div>
+    </div>
+    <a asp-action="MyAppointments" class="btn-primary-med">
+        <i class="fa-solid fa-calendar-check"></i> My Appointments
+    </a>
+</div>
+
+<!-- Stat cards -->
+<div class="stat-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#FFFBEB; color:#F59E0B;">
+            <i class="fa-solid fa-calendar-day"></i>
+        </div>
+        <div class="stat-card-label">Today</div>
+        <div class="stat-card-value">@ViewBag.TodayCount</div>
+        <div class="stat-card-sub">Appointments today</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#EFF6FF; color:#3B82F6;">
+            <i class="fa-solid fa-clock"></i>
+        </div>
+        <div class="stat-card-label">Pending</div>
+        <div class="stat-card-value">@ViewBag.PendingCount</div>
+        <div class="stat-card-sub">Awaiting confirmation</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#FEF2F2; color:#EF4444;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="stat-card-label">Follow Ups</div>
+        <div class="stat-card-value">@ViewBag.FollowUpCount</div>
+        <div class="stat-card-sub">Need follow up</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#E1F5EE; color:#1D9E75;">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stat-card-label">Total Patients</div>
+        <div class="stat-card-value">
+            @(Model.Appointments?.Select(a => a.PatientId).Distinct().Count() ?? 0)
+        </div>
+        <div class="stat-card-sub">Unique patients</div>
+    </div>
+</div>
+
+<!-- Today's schedule -->
+<div class="data-table-wrapper">
+    <div class="data-table-toolbar">
+        <div>
+            <div style="font-size:14px; font-weight:600;">Today's Schedule</div>
+            <div style="font-size:12px; color:var(--color-text-3);">
+                @DateTime.Today.ToString("dddd, MMMM dd yyyy")
+            </div>
+        </div>
+        <a asp-action="MyAppointments" class="btn-secondary-med">
+            Full List <i class="fa-solid fa-arrow-right" style="font-size:11px;"></i>
+        </a>
+    </div>
+
+    @if (todayAppts.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Patient</th>
+                    <th>Status</th>
+                    <th>History</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appt in todayAppts)
+                {
+                    var sc = appt.Status?.ToLower() switch
+                    {
+                        "confirmed" => "badge-confirmed",
+                        "pending" => "badge-pending",
+                        "cancelled" => "badge-cancelled",
+                        "completed" => "badge-completed",
+                        "needs follow up" => "badge-followup",
+                        _ => "badge-pending"
+                    };
+                    <tr>
+                        <td style="font-family:var(--font-mono); font-size:13px; font-weight:600;">
+                            @appt.AppointmentDate.ToString("HH:mm")
+                        </td>
+                        <td>
+                            <div style="font-weight:500;">@appt.Patient?.FullName</div>
+                            <div style="font-size:11.5px; color:var(--color-text-3);">
+                                @appt.Patient?.PhoneNumber
+                            </div>
+                        </td>
+                        <td><span class="badge-status @sc">@appt.Status</span></td>
+                        <td>
+                            @if (appt.History != null)
+                            {
+                                <span class="badge-status badge-confirmed" style="font-size:11px;">
+                                    <i class="fa-solid fa-circle-check" style="font-size:9px;"></i> Recorded
+                                </span>
+                            }
+                            else
+                            {
+                                <a asp-action="WriteHistory"
+                                   asp-route-appointmentId="@appt.AppointmentId"
+                                   class="btn-action btn-action-edit" style="font-size:11px;">
+                                    <i class="fa-solid fa-pen"></i> Write
+                                </a>
+                            }
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                @if (appt.Patient != null)
+                                {
+                                    <a asp-action="PatientProfile"
+                                       asp-route-patientId="@appt.PatientId"
+                                       class="btn-action btn-action-view">
+                                        <i class="fa-solid fa-user"></i> Profile
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-regular fa-calendar"></i></div>
+            <h3>No appointments today</h3>
+            <p>You have a free day — enjoy the rest!</p>
+        </div>
+    }
+</div>

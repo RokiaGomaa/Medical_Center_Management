@@ -1,0 +1,72 @@
+﻿@model Medical_Center_Management_System.Models.Patient
+
+@{
+    ViewData["Title"] = "Edit Patient";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Patient</h1>
+        <p>Update details for <strong>@Model.FullName</strong></p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="form-card">
+    <div class="form-card-header">
+        <h2><i class="fa-solid fa-pen" style="color:var(--color-warning); margin-right:8px;"></i>Edit Patient</h2>
+        <p>Modify the patient's details below</p>
+    </div>
+
+    <form asp-action="Edit" method="post">
+        <div class="form-card-body">
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <input type="hidden" asp-for="PatientId" />
+
+            <!-- Full Name -->
+            <div class="form-group-med">
+                <label asp-for="FullName">Full Name</label>
+                <input asp-for="FullName" class="form-control-med" />
+                <span asp-validation-for="FullName" class="field-validation-error"></span>
+            </div>
+
+            <!-- Phone & Gender -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group-med">
+                    <label asp-for="PhoneNumber">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control-med" />
+                    <span asp-validation-for="PhoneNumber" class="field-validation-error"></span>
+                </div>
+                <div class="form-group-med">
+                    <label asp-for="Gender">Gender</label>
+                    <select asp-for="Gender" class="form-control-med" asp-items="ViewBag.GenderList">
+                        <option value="">— Select gender —</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Date of Birth -->
+            <div class="form-group-med">
+                <label asp-for="DateOfBirth">Date of Birth</label>
+                <input asp-for="DateOfBirth" class="form-control-med" type="date" />
+                <span asp-validation-for="DateOfBirth" class="field-validation-error"></span>
+            </div>
+        </div>
+
+        <div class="form-card-footer">
+            <button type="submit" class="btn-primary-med">
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+            </button>
+            <a href="javascript:history.back()" class="btn-secondary-med">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

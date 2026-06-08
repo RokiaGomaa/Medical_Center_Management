@@ -1,0 +1,387 @@
+﻿@model Medical_Center_Management_System.Models.Patient
+
+@{
+    ViewData["Title"] = "Patient Profile";
+    var initials = string.Join("", Model.FullName.Split(' ')
+                    .Take(2).Select(w => w[0].ToString().ToUpper()));
+    var age = DateTime.Today.Year - Model.DateOfBirth.Year;
+    if (Model.DateOfBirth.Date > DateTime.Today.AddYears(-age)) age--;
+    var isFemale = Model.Gender?.ToLower() == "female";
+    var avatarStyle = isFemale
+        ? "background:#FDF2F8; color:#9D174D;"
+        : "background:var(--color-primary-light); color:var(--color-primary-dark);";
+
+    bool hasMedicalRecord = Model.MedicalRecord != null;
+    bool hasAppointments = Model.Appointments != null && Model.Appointments.Any();
+    var histories = Model.Appointments?
+                                .Where(a => a.History != null)
+                                .Select(a => a.History!)
+                                .OrderByDescending(h => h.FollowUpDate)
+                                .ToList() ?? new();
+    bool hasHistories = histories.Any();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Patient Profile</h1>
+        <p>Full medical profile for this patient</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- ========== PROFILE HEADER ========== -->
+<div style="background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:24px; margin-bottom:16px; box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+    <div style="width:64px; height:64px; border-radius:50%; @avatarStyle display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; flex-shrink:0;">
+        @initials
+    </div>
+    <div style="flex:1;">
+        <div style="font-size:20px; font-weight:700; color:var(--color-text-1);">@Model.FullName</div>
+        <div style="font-size:13px; color:var(--color-text-3); margin-top:4px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <span><i class="fa-solid fa-phone" style="margin-right:4px;"></i>@Model.PhoneNumber</span>
+            <span><i class="fa-solid fa-cake-candles" style="margin-right:4px;"></i>@Model.DateOfBirth.ToString("MMM dd, yyyy") (@age years)</span>
+            <span>
+                @if (isFemale)
+                {
+                    <i class="fa-solid fa-venus" style="margin-right:4px;"></i>
+                }
+                else
+                {
+                    <i class="fa-solid fa-mars" style="margin-right:4px;"></i>
+                }
+                @Model.Gender
+            </span>
+        </div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a asp-action="Report" asp-route-id="@Model.PatientId"
+           class="btn-secondary-med" target="_blank"
+           style="border-color:#E5E7EB;">
+            <i class="fa-solid fa-file-pdf" style="color:#EF4444;"></i> Export PDF
+        </a>
+        
+    </div>
+</div>
+
+<!-- ========== QUICK ACTIONS ========== -->
+<div style="display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:20px; max-width:400px;">
+
+    @if (!hasMedicalRecord)
+    {
+        <a href="/MedicalRecords/Create"
+           style="display:flex; align-items:center; gap:16px; padding:18px 20px; background:var(--color-surface); border:2px dashed var(--color-primary); border-radius:var(--radius-lg); text-decoration:none; transition:all var(--transition);"
+           onmouseover="this.style.background='var(--color-primary-light)'"
+           onmouseout="this.style.background='var(--color-surface)'">
+            <div style="width:44px; height:44px; border-radius:var(--radius-md); background:var(--color-primary-light); color:var(--color-primary); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
+                <i class="fa-solid fa-file-medical"></i>
+            </div>
+            <div>
+                <div style="font-size:14px; font-weight:600; color:var(--color-primary);">
+                    <i class="fa-solid fa-plus" style="font-size:11px; margin-right:4px;"></i>Add Medical Record
+                </div>
+                <div style="font-size:12px; color:var(--color-text-3); margin-top:2px;">No record on file — click to create one</div>
+            </div>
+        </a>
+    }
+    else
+    {
+        <a href="/MedicalRecords/Edit/@Model.MedicalRecord!.MedicalRecordId"
+           style="display:flex; align-items:center; gap:16px; padding:18px 20px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); text-decoration:none; transition:all var(--transition);"
+           onmouseover="this.style.background='var(--color-surface-2)'"
+           onmouseout="this.style.background='var(--color-surface)'">
+            <div style="width:44px; height:44px; border-radius:var(--radius-md); background:var(--color-success-bg); color:var(--color-success-text); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
+                <i class="fa-solid fa-file-medical"></i>
+            </div>
+            <div>
+                <div style="font-size:14px; font-weight:600; color:var(--color-text-1);">Medical Record</div>
+                <div style="font-size:12px; color:var(--color-success-text); margin-top:2px;">
+                    <i class="fa-solid fa-circle-check" style="font-size:10px;"></i> On file — click to edit
+                </div>
+            </div>
+            <div style="margin-left:auto; color:var(--color-text-3);"><i class="fa-solid fa-pen"></i></div>
+        </a>
+    } 
+</div>
+<!-- ========== TABS ========== -->
+<div style="display:flex; gap:4px; margin-bottom:16px; border-bottom:1px solid var(--color-border);">
+    <button class="profile-tab active" onclick="showTab('tab-record', this)">
+        <i class="fa-solid fa-file-medical"></i> Medical Record
+    </button>
+    
+    <button class="profile-tab" onclick="showTab('tab-history', this)">
+        <i class="fa-solid fa-clock-rotate-left"></i> History
+        @if (hasHistories)
+        {
+            <span class="tab-count">@histories.Count</span>
+        }
+    </button>
+</div>
+
+<!-- ========== TAB 1: MEDICAL RECORD ========== -->
+<div id="tab-record" class="tab-panel">
+    @if (hasMedicalRecord)
+    {
+        var mr = Model.MedicalRecord!;
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="detail-card" style="max-width:unset;">
+                <div class="detail-card-header">
+                    <div class="detail-avatar-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                    <div>
+                        <div class="detail-title">Health Overview</div>
+                        <div class="detail-subtitle">Core medical data</div>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <div class="detail-label">Blood Type</div>
+                        <div class="detail-value">
+                            <span style="font-size:16px; font-weight:700; color:var(--color-danger-text);">@mr.BloodType</span>
+                        </div>
+                    </div>
+                    @if (mr.Height.HasValue)
+                    {
+                        <div class="detail-row">
+                            <div class="detail-label">Height</div>
+                            <div class="detail-value">@mr.Height cm</div>
+                        </div>
+                    }
+                    @if (mr.Weight.HasValue)
+                    {
+                        <div class="detail-row">
+                            <div class="detail-label">Weight</div>
+                            <div class="detail-value">@mr.Weight kg</div>
+                        </div>
+                    }
+                    @if (mr.Height.HasValue && mr.Weight.HasValue)
+                    {
+                        var bmi = Math.Round(mr.Weight.Value / Math.Pow(mr.Height.Value / 100.0, 2), 1);
+                        var bmiLabel = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal" : bmi < 30 ? "Overweight" : "Obese";
+                        var bmiClass = bmi < 18.5 ? "badge-pending" : bmi < 25 ? "badge-confirmed" : bmi < 30 ? "badge-pending" : "badge-cancelled";
+                        <div class="detail-row">
+                            <div class="detail-label">BMI</div>
+                            <div class="detail-value">
+                                @bmi <span class="badge-status @bmiClass" style="margin-left:8px;">@bmiLabel</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="detail-card" style="max-width:unset;">
+                <div class="detail-card-header">
+                    <div class="detail-avatar-icon" style="background:#FEF2F2; color:#EF4444;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <div class="detail-title">Conditions & Flags</div>
+                        <div class="detail-subtitle">Chronic conditions and alerts</div>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <div class="detail-label">Diabetes</div>
+                        <div class="detail-value"><span class="badge-status @(mr.HasDiabetes ? "badge-cancelled" : "badge-confirmed")">@(mr.HasDiabetes ? "Yes" : "No")</span></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Hypertension</div>
+                        <div class="detail-value"><span class="badge-status @(mr.HasHypertension ? "badge-cancelled" : "badge-confirmed")">@(mr.HasHypertension ? "Yes" : "No")</span></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Heart Disease</div>
+                        <div class="detail-value"><span class="badge-status @(mr.HasHeartDisease ? "badge-cancelled" : "badge-confirmed")">@(mr.HasHeartDisease ? "Yes" : "No")</span></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Allergies</div>
+                        <div class="detail-value"><span class="badge-status @(mr.HasAllergies ? "badge-cancelled" : "badge-confirmed")">@(mr.HasAllergies ? "Yes" : "No")</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (mr.HasAllergies || !string.IsNullOrWhiteSpace(mr.ChronicDiseasesNotes) || !string.IsNullOrWhiteSpace(mr.CurrentMedications))
+        {
+            <div class="detail-card" style="max-width:unset; margin-top:16px;">
+                <div class="detail-card-header">
+                    <div class="detail-avatar-icon" style="background:#FFFBEB; color:#F59E0B;">
+                        <i class="fa-solid fa-notes-medical"></i>
+                    </div>
+                    <div>
+                        <div class="detail-title">Clinical Notes</div>
+                        <div class="detail-subtitle">Medications, allergies and chronic disease notes</div>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    @if (mr.HasAllergies && !string.IsNullOrWhiteSpace(mr.AllergyDetails))
+                    {
+                        <div class="detail-row"><div class="detail-label">Allergy Details</div><div class="detail-value">@mr.AllergyDetails</div></div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(mr.ChronicDiseasesNotes))
+                    {
+                        <div class="detail-row"><div class="detail-label">Chronic Notes</div><div class="detail-value" style="line-height:1.6;">@mr.ChronicDiseasesNotes</div></div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(mr.CurrentMedications))
+                    {
+                        <div class="detail-row"><div class="detail-label">Current Medications</div><div class="detail-value" style="line-height:1.6;">@mr.CurrentMedications</div></div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="data-table-wrapper">
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-file-circle-xmark"></i></div>
+                <h3>No medical record found</h3>
+                <p>This patient doesn't have a medical record yet.</p>
+                <a href="/MedicalRecords/Create" class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
+                    <i class="fa-solid fa-plus"></i> Create Medical Record
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ========== TAB 3: HISTORY ========== -->
+<div id="tab-history" class="tab-panel" style="display:none;">
+    @if (hasHistories)
+    {
+        <div class="data-table-wrapper">
+            <div style="padding:12px 16px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:13px; font-weight:500;">Clinical History</span>
+
+                <a asp-controller="Histories"
+                   asp-action="Create"
+                   asp-route-patientId="@Model.PatientId"
+                   class="btn-primary-med"
+                   style="font-size:12px; padding:5px 12px;">
+                    <i class="fa-solid fa-plus"></i> Add History
+                </a>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Diagnosis</th>
+                        <th>Treatment</th>
+                        <th>Worked?</th>
+                        <th>Follow Up</th>
+                        <th>Status</th>
+                        <th>First Visit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var h in histories)
+                    {
+                        var hsc = h.Status?.ToLower() switch
+                        {
+                            "stable" => "badge-confirmed",
+                            "improved" => "badge-completed",
+                            "recovered" => "badge-recovered",
+                            "completed" => "badge-completed",
+                            "needs follow up" => "badge-followup",
+                            _ => "badge-pending"
+                        };
+                        <tr>
+                            <td style="max-width:180px;">
+                                <div style="font-weight:500; font-size:13px;">
+                                    @(h.Diagnosis?.Length > 50 ? h.Diagnosis.Substring(0, 50) + "…" : h.Diagnosis ?? "—")
+                                </div>
+                            </td>
+                            <td style="max-width:180px; color:var(--color-text-2); font-size:13px;">
+                                @(h.Treatment?.Length > 50 ? h.Treatment.Substring(0, 50) + "…" : h.Treatment ?? "—")
+                            </td>
+                            <td>
+                                <span class="badge-status @(h.DidTreatmentWork ? "badge-confirmed" : "badge-cancelled")">
+                                    @(h.DidTreatmentWork ? "Yes" : "No")
+                                </span>
+                            </td>
+                            <td style="font-size:12.5px; font-family:var(--font-mono);">
+                                @(h.FollowUpDate.HasValue ? h.FollowUpDate.Value.ToString("MMM dd, yyyy") : "—")
+                            </td>
+                            <td><span class="badge-status @hsc">@(h.Status ?? "—")</span></td>
+                            <td>
+                                <span class="badge-status @(h.IsFirstVisit ? "badge-pending" : "badge-confirmed")">
+                                    @(h.IsFirstVisit ? "Yes" : "No")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="table-actions">
+                                    <a href="/Histories/Details/@h.HistoryId" class="btn-action btn-action-view"><i class="fa-solid fa-eye"></i> View</a>
+                                    <a href="/Histories/Edit/@h.HistoryId" class="btn-action btn-action-edit"><i class="fa-solid fa-pen"></i> Edit</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="data-table-wrapper">
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <h3>No history records</h3>
+                <p>No clinical history has been recorded for this patient yet.</p>
+
+                <a asp-controller="DoctorPortal"
+                   asp-action="WriteHistory"
+                   asp-route-patientId="@Model.PatientId"
+                   class="btn-primary-med"
+                   style="margin-top:14px; display:inline-flex;">
+                    <i class="fa-solid fa-plus"></i> Add History
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .profile-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 16px;
+        border: none;
+        background: transparent;
+        font-family: var(--font-main);
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--color-text-3);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition: color var(--transition), border-color var(--transition);
+    }
+
+        .profile-tab:hover {
+            color: var(--color-text-1);
+        }
+
+        .profile-tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+    .tab-count {
+        background: var(--color-primary-light);
+        color: var(--color-primary-dark);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 7px;
+        border-radius: 10px;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function showTab(id, btn) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).style.display = 'block';
+            btn.classList.add('active');
+        }
+    </script>
+}

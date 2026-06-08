@@ -1,0 +1,160 @@
+﻿@{
+    ViewData["Title"] = "Confirm Booking";
+    var doctor = ViewBag.Doctor as Medical_Center_Management_System.Models.Doctor;
+    var patient = ViewBag.Patient as Medical_Center_Management_System.Models.Patient;
+    var dateTime = (DateTime)ViewBag.DateTime;
+    var clinicId = (int)ViewBag.ClinicId;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Confirm Booking</h1>
+        <p>Review your appointment details before confirming</p>
+    </div>
+    <a asp-action="AvailableSlots" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back to Slots
+    </a>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:800px;">
+
+    <!-- Left: Appointment summary card -->
+    <div class="detail-card" style="max-width:unset;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon" style="background:#E1F5EE; color:#1D9E75;">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+                <div class="detail-title">Appointment Details</div>
+                <div class="detail-subtitle">Please confirm before booking</div>
+            </div>
+        </div>
+        <div class="detail-body">
+
+            <div class="detail-row">
+                <div class="detail-label">Patient</div>
+                <div class="detail-value" style="font-weight:600;">@patient?.FullName</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Doctor</div>
+                <div class="detail-value">
+                    <div style="font-weight:600;">@doctor?.FullName</div>
+                    <div style="margin-top:4px;">
+                        <span class="badge-status badge-completed" style="font-size:11px;">
+                            <i class="fa-solid fa-stethoscope" style="font-size:9px;"></i>
+                            @doctor?.Specialty?.Description
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Clinic</div>
+                <div class="detail-value">
+                    <div>@doctor?.Clinic?.Name</div>
+                    <div style="font-size:12px; color:var(--color-text-3); margin-top:2px;">
+                        <i class="fa-solid fa-location-dot" style="margin-right:3px;"></i>
+                        @doctor?.Clinic?.Address
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Date</div>
+                <div class="detail-value" style="font-weight:600;">
+                    @dateTime.ToString("dddd, MMMM dd yyyy")
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Time</div>
+                <div class="detail-value">
+                    <span style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--color-primary);">
+                        @dateTime.ToString("HH:mm")
+                    </span>
+                    <span style="font-size:12px; color:var(--color-text-3); margin-left:8px;">
+                        – @dateTime.AddMinutes(30).ToString("HH:mm") &nbsp;(30 min)
+                    </span>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Consultation Fee</div>
+                <div class="detail-value" style="font-weight:600; color:var(--color-primary);">
+                    @doctor?.Clinic?.Price.ToString("C")
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Status After Booking</div>
+                <div class="detail-value">
+                    <span class="badge-status badge-pending">Pending</span>
+                    <div style="font-size:11.5px; color:var(--color-text-3); margin-top:4px;">
+                        Will be confirmed by the clinic
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Right: Doctor info + confirm -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+        <!-- Doctor mini card -->
+        <div class="detail-card" style="max-width:unset;">
+            <div class="detail-card-header">
+                <div style="width:44px; height:44px; border-radius:50%;
+                    background:#EFF6FF; color:#1E40AF;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:15px; font-weight:700; flex-shrink:0;">
+                    @(string.Join("", (doctor?.FullName ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w[0].ToString().ToUpper())))
+                </div>
+                <div>
+                    <div class="detail-title">@doctor?.FullName</div>
+                    <div class="detail-subtitle">@doctor?.Specialty?.Description</div>
+                </div>
+            </div>
+            <div class="detail-body">
+                <div class="detail-row">
+                    <div class="detail-label">Experience</div>
+                    <div class="detail-value">@doctor?.YearsOfExperience year(s)</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Working Hours</div>
+                    <div class="detail-value" style="font-family:var(--font-mono); font-size:13px;">
+                        @doctor?.Clinic?.StartTime.ToString(@"hh\:mm") – @doctor?.Clinic?.EndTime.ToString(@"hh\:mm")
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info note -->
+        <div style="padding:14px; background:var(--color-info-bg); border:1px solid #BFDBFE;
+            border-radius:var(--radius-md); font-size:13px; color:var(--color-info-text);">
+            <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
+            Your appointment will be set to <strong>Pending</strong> until confirmed by the clinic staff.
+            You will see it in <strong>My Appointments</strong> right away.
+        </div>
+
+        <!-- Confirm form -->
+        <!-- FIX: uses BookAppointmentVM fields (DoctorId, ClinicId, AppointmentDate) -->
+        <form asp-action="BookAppointment" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="DoctorId" value="@doctor?.DoctorId" />
+            <input type="hidden" name="ClinicId" value="@clinicId" />
+            <input type="hidden" name="AppointmentDate" value="@dateTime.ToString("yyyy-MM-ddTHH:mm:ss")" />
+
+            <button type="submit" class="btn-primary-med" style="width:100%; justify-content:center;">
+                <i class="fa-solid fa-calendar-check"></i> Confirm Booking
+            </button>
+        </form>
+
+        <a asp-action="AvailableSlots" class="btn-secondary-med" style="text-align:center; justify-content:center;">
+            <i class="fa-solid fa-xmark"></i> Cancel
+        </a>
+
+    </div>
+
+</div>

@@ -1,0 +1,218 @@
+﻿@model Medical_Center_Management_System.ViewModels.PaginatedList<Medical_Center_Management_System.Models.History>
+
+@{
+    ViewData["Title"] = "Histories";
+    var search = Context.Request.Query["search"].ToString();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Clinical Histories</h1>
+        <p>Manage all patient clinical history records</p>
+    </div>
+    <a asp-action="Create" class="btn-primary-med">
+        <i class="fa-solid fa-plus"></i> Add History
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-toast alert-toast-success" style="margin-bottom:16px;">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>@TempData["Success"]</span>
+        <button class="alert-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+}
+
+<!-- Search -->
+<div class="data-table-wrapper" style="margin-bottom:16px;">
+    <form asp-action="Index" method="get">
+        <div class="data-table-toolbar">
+            <div class="search-box" style="flex:1; min-width:240px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" value="@search"
+                       placeholder="Search by patient, doctor, clinic, diagnosis..." />
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn-primary-med">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
+                @if (!string.IsNullOrEmpty(search))
+                {
+                    <a asp-action="Index" class="btn-secondary-med">
+                        <i class="fa-solid fa-xmark"></i> Clear
+                    </a>
+                }
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="data-table-wrapper">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12.5px; color:var(--color-text-3);">
+            <strong style="color:var(--color-text-1);">@Model.TotalItems</strong> history records
+        </span>
+        @if (!string.IsNullOrEmpty(search))
+        {
+            <span style="font-size:12px; color:var(--color-primary);">
+                <i class="fa-solid fa-filter"></i> Filtered by "@search"
+            </span>
+        }
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Diagnosis</th>
+                    <th>Treatment Worked</th>
+                    <th>Follow Up</th>
+                    <th>Status</th>
+                    <th>First Visit</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = ((Model.PageIndex - 1) * Model.PageSize) + 1;
+                }
+                @foreach (var item in Model)
+                {
+                    var statusClass = item.Status?.ToLower() switch
+                    {
+                        "stable" => "badge-confirmed",
+                        "improved" => "badge-completed",
+                        "recovered" => "badge-recovered",
+                        "completed" => "badge-completed",
+                        "needs follow up" => "badge-followup",
+                        _ => "badge-pending"
+                    };
+
+                    var patientInitials = item.Appointment?.Patient?.FullName != null
+                    ? string.Join("", item.Appointment.Patient.FullName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()))
+                    : "?";
+
+                    var isOverdue = item.FollowUpDate.HasValue && item.FollowUpDate.Value.Date < DateTime.Today
+                    && item.Status?.ToLower() == "needs follow up";
+
+                    <tr class="@(isOverdue ? "row-highlight" : "")">
+                        <td style="color:var(--color-text-3); font-size:12px;">@i</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary-light); color:var(--color-primary-dark); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; flex-shrink:0;">
+                                    @patientInitials
+                                </div>
+                                <div>
+                                    <div style="font-weight:500; font-size:13px;">@item.Appointment?.Patient?.FullName</div>
+                                    <div style="font-size:11px; color:var(--color-text-3);">@item.Appointment?.AppointmentDate.ToString("MMM dd, yyyy")</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="font-size:13px; color:var(--color-text-2);">@item.Appointment?.Doctor?.FullName</td>
+                        <td style="max-width:180px; font-size:13px;">
+                            @(item.Diagnosis?.Length > 50 ? item.Diagnosis.Substring(0, 50) + "…" : item.Diagnosis ?? "—")
+                        </td>
+                        <td>
+                            <span class="badge-status @(item.DidTreatmentWork ? "badge-confirmed" : "badge-cancelled")">
+                                @(item.DidTreatmentWork ? "Yes" : "No")
+                            </span>
+                        </td>
+                        <td>
+                            @if (item.FollowUpDate.HasValue)
+                            {
+                                <span style="font-family:var(--font-mono); font-size:12px; @(isOverdue ? "color:var(--color-danger-text); font-weight:600;" : "")">
+                                    @item.FollowUpDate.Value.ToString("MMM dd, yyyy")
+                                    @if (isOverdue)
+                                    {
+                                        <text> ⚠</text>
+                                    }
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="color:var(--color-text-3); font-size:12px;">No date</span>
+                            }
+                        </td>
+                        <td><span class="badge-status @statusClass">@(item.Status ?? "—")</span></td>
+                        <td>
+                            <span class="badge-status @(item.IsFirstVisit ? "badge-pending" : "badge-confirmed")">
+                                @(item.IsFirstVisit ? "Yes" : "No")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a asp-action="Details" asp-route-id="@item.HistoryId" class="btn-action btn-action-view"><i class="fa-solid fa-eye"></i> View</a>
+                                <a asp-action="Edit" asp-route-id="@item.HistoryId" class="btn-action btn-action-edit"><i class="fa-solid fa-pen"></i> Edit</a>
+                                <a asp-action="Delete" asp-route-id="@item.HistoryId" class="btn-action btn-action-delete"><i class="fa-solid fa-trash"></i> Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+        </table>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:18px;">
+
+                @if (Model.HasPreviousPage)
+                {
+                    <a class="btn-secondary-med"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex - 1)"
+                       asp-route-search="@Context.Request.Query["search"]">
+                        Previous
+                    </a>
+                }
+                else
+                {
+                    <span class="btn-secondary-med" style="opacity:0.5; pointer-events:none;">
+                        Previous
+                    </span>
+                }
+
+                <span style="font-size:14px; color:var(--color-text-2);">
+                    Page @Model.PageIndex of @Model.TotalPages
+                </span>
+
+                @if (Model.HasNextPage)
+                {
+                    <a class="btn-secondary-med"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex + 1)"
+                       asp-route-search="@Context.Request.Query["search"]">
+                        Next
+                    </a>
+                }
+                else
+                {
+                    <span class="btn-secondary-med" style="opacity:0.5; pointer-events:none;">
+                        Next
+                    </span>
+                }
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <h3>No history records found</h3>
+            <p>@(string.IsNullOrEmpty(search) ? "Get started by adding the first history record." : $"No records match \"{search}\".")</p>
+            @if (string.IsNullOrEmpty(search))
+            {
+                <a asp-action="Create" class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
+                    <i class="fa-solid fa-plus"></i> Add History
+                </a>
+            }
+        </div>
+    }
+</div>

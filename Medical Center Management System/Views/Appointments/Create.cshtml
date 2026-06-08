@@ -1,0 +1,230 @@
+﻿@model Medical_Center_Management_System.Models.Appointment
+
+@{
+    ViewData["Title"] = "Book Appointment";
+
+    bool returnToHistory = ViewBag.ReturnToHistory != null && ViewBag.ReturnToHistory == true;
+    int? returnPatientId = ViewBag.ReturnPatientId as int?;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Book Appointment</h1>
+        <p>Schedule a new appointment for a patient</p>
+    </div>
+
+    @if (returnToHistory && returnPatientId != null)
+    {
+        <a asp-controller="Histories"
+               asp-action="Create"
+               asp-route-patientId="@returnPatientId"
+               class="btn-secondary-med">
+            <i class="fa-solid fa-arrow-left"></i> Back to Add History
+        </a>
+    }
+    else
+    {
+        <a href="javascript:history.back()" class="btn-secondary-med">
+            <i class="fa-solid fa-arrow-left"></i> Back 
+        </a>
+    }
+</div>
+
+<div class="form-card">
+    <div class="form-card-header">
+        <h2>
+            <i class="fa-solid fa-calendar-plus" style="color:var(--color-primary); margin-right:8px;"></i>
+            Appointment Details
+        </h2>
+        <p>Fill in the information below to schedule a new appointment</p>
+    </div>
+
+    <form asp-action="Create" method="post">
+
+        <input type="hidden" name="returnToHistory" value="@returnToHistory.ToString().ToLower()" />
+        <input type="hidden" name="returnPatientId" value="@returnPatientId" />
+
+        <div class="form-card-body">
+
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+                <div class="form-group-med">
+                    <label asp-for="AppointmentDate">Date & Time</label>
+
+                    <input asp-for="AppointmentDate"
+                           class="form-control-med"
+                           type="datetime-local" />
+
+                    <span asp-validation-for="AppointmentDate" class="field-validation-error"></span>
+                </div>
+
+                <div class="form-group-med">
+                    <label asp-for="Status">Status</label>
+
+                    <select asp-for="Status" class="form-control-med">
+                        <option value="">— Select status —</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Needs Follow Up">Needs Follow Up</option>
+                    </select>
+
+                    <span asp-validation-for="Status" class="field-validation-error"></span>
+                </div>
+
+            </div>
+
+            <div class="form-group-med">
+
+                <label asp-for="PatientId">Patient</label>
+
+                <select asp-for="PatientId"
+                        class="form-control-med"
+                        asp-items="ViewBag.PatientId">
+
+                    <option value="">— Select patient —</option>
+
+                </select>
+
+                <span asp-validation-for="PatientId" class="field-validation-error"></span>
+
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+                <div class="form-group-med">
+
+                    <label asp-for="DoctorId">Doctor</label>
+
+                    <select asp-for="DoctorId"
+                            id="DoctorId"
+                            class="form-control-med"
+                            asp-items="ViewBag.DoctorId">
+
+                        <option value="">— Select doctor —</option>
+
+                    </select>
+
+                    <span asp-validation-for="DoctorId" class="field-validation-error"></span>
+
+                </div>
+
+                <div class="form-group-med">
+
+                    <label>Clinic</label>
+
+                    <!-- Hidden input يتبعت للـ POST -->
+                    <input asp-for="ClinicId" type="hidden" id="ClinicId" />
+
+                    <!-- ظاهر للمستخدم فقط -->
+                    <input type="text"
+                           id="ClinicName"
+                           class="form-control-med"
+                           readonly
+                           placeholder="Clinic will be selected automatically" />
+
+                    <span asp-validation-for="ClinicId" class="field-validation-error"></span>
+
+                </div>
+
+            </div>
+
+            <div style="padding:12px 14px; background:var(--color-info-bg); border:1px solid #BFDBFE; border-radius:var(--radius-md); font-size:13px; color:var(--color-info-text);">
+
+                <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
+
+                The system will automatically check for scheduling conflicts — a doctor, patient, or clinic cannot have two appointments at the same time.
+
+            </div>
+
+        </div>
+
+        <div class="form-card-footer">
+
+            <button type="submit" class="btn-primary-med">
+
+                <i class="fa-solid fa-calendar-check"></i>
+                Book Appointment
+
+            </button>
+
+            @if (returnToHistory && returnPatientId != null)
+            {
+                <a asp-controller="Histories"
+                       asp-action="Create"
+                       asp-route-patientId="@returnPatientId"
+                       class="btn-secondary-med">
+                    Cancel
+                </a>
+            }
+            else
+            {
+                <a href="javascript:history.back()" class="btn-secondary-med">
+                    <i class="fa-solid fa-arrow-left"></i> Cancel
+                </a>
+            }
+
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+
+        document.getElementById("DoctorId").addEventListener("change", function () {
+
+            const doctorId = this.value;
+
+            const clinicIdInput = document.getElementById("ClinicId");
+            const clinicNameInput = document.getElementById("ClinicName");
+
+            if (!doctorId) {
+
+                clinicIdInput.value = "";
+                clinicNameInput.value = "";
+
+                return;
+            }
+
+            fetch('/Appointments/GetDoctorClinic?doctorId=' + doctorId)
+                .then(response => response.json())
+                .then(data => {
+
+                    if (data.success) {
+
+                        clinicIdInput.value = data.clinicId;
+                        clinicNameInput.value = data.clinicName;
+
+                    }
+                    else {
+
+                        clinicIdInput.value = "";
+                        clinicNameInput.value = "";
+
+                        alert(data.message);
+
+                    }
+
+                })
+                .catch(error => {
+
+                    console.log(error);
+
+                    clinicIdInput.value = "";
+                    clinicNameInput.value = "";
+
+                });
+
+        });
+
+    </script>
+}

@@ -1,0 +1,188 @@
+﻿@model Medical_Center_Management_System.ViewModels.LoginVM
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Login";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — Medix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+            body {
+                background: var(--color-bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+            }
+
+            .auth-card {
+                background: var(--color-surface);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-xl);
+                padding: 40px;
+                width: 100%;
+                max-width: 420px;
+                box-shadow: var(--shadow-md);
+            }
+
+            .auth-logo {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 32px;
+            }
+
+            .auth-logo-mark {
+                width: 36px;
+                height: 36px;
+                background: var(--color-primary);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 16px;
+            }
+
+            .auth-logo-text {
+                font-size: 22px;
+                font-weight: 600;
+                color: var(--color-text-1);
+            }
+
+            .auth-title {
+                font-size: 20px;
+                font-weight: 600;
+                color: var(--color-text-1);
+                margin-bottom: 6px;
+            }
+
+            .auth-subtitle {
+                font-size: 13px;
+                color: var(--color-text-3);
+                margin-bottom: 28px;
+            }
+
+            .auth-divider {
+                text-align: center;
+                margin: 20px 0;
+                font-size: 12px;
+                color: var(--color-text-3);
+                position: relative;
+            }
+
+                .auth-divider::before, .auth-divider::after {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    width: 40%;
+                    height: 1px;
+                    background: var(--color-border);
+                }
+
+                .auth-divider::before {
+                    left: 0;
+                }
+
+                .auth-divider::after {
+                    right: 0;
+                }
+
+            .auth-footer {
+                text-align: center;
+                margin-top: 24px;
+                font-size: 13px;
+                color: var(--color-text-3);
+            }
+
+                .auth-footer a {
+                    color: var(--color-primary);
+                    text-decoration: none;
+                    font-weight: 500;
+                }
+
+            .remember-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 20px;
+                font-size: 13px;
+                color: var(--color-text-2);
+            }
+
+                .remember-row input[type=checkbox] {
+                    width: 15px;
+                    height: 15px;
+                    accent-color: var(--color-primary);
+                }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+
+        <div class="auth-logo">
+            <div class="auth-logo-mark"><i class="fa-solid fa-plus"></i></div>
+            <span class="auth-logo-text">Medix</span>
+        </div>
+
+        <div class="auth-title">Welcome back</div>
+        <div class="auth-subtitle">Sign in to your account to continue</div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert-toast alert-toast-success" style="margin-bottom:16px;">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>@TempData["Success"]</span>
+            </div>
+        }
+
+        <form asp-action="Login" method="post">
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <div class="form-group-med">
+                <label asp-for="Email">Email Address</label>
+                <input asp-for="Email" class="form-control-med" placeholder="you@example.com" autocomplete="email" />
+                <span asp-validation-for="Email" class="field-validation-error"></span>
+            </div>
+
+            <div class="form-group-med">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" class="form-control-med" type="password" placeholder="••••••••" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="field-validation-error"></span>
+            </div>
+
+            <div class="remember-row">
+                <input asp-for="RememberMe" type="checkbox" />
+                <label asp-for="RememberMe">Remember me for 8 hours</label>
+            </div>
+
+            <button type="submit" class="btn-primary-med" style="width:100%; justify-content:center;">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account?
+            <a asp-action="Register" asp-controller="Auth">Create one</a>
+        </div>
+
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

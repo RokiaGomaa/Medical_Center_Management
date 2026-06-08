@@ -1,0 +1,607 @@
+﻿@model Medical_Center_Management_System.Models.Patient
+
+@{
+    ViewData["Title"] = "My Profile";
+
+    var age = DateTime.Today.Year - Model.DateOfBirth.Year;
+    if (Model.DateOfBirth.Date > DateTime.Today.AddYears(-age)) age--;
+
+    var initials = string.Join("", Model.FullName
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2).Select(w => w[0].ToString().ToUpper()));
+
+    var isFemale = Model.Gender?.ToLower() == "female";
+    var avatarBg = isFemale ? "#FDF2F8" : "var(--color-primary-light)";
+    var avatarColor = isFemale ? "#9D174D" : "var(--color-primary-dark)";
+
+    var mr = Model.MedicalRecord;
+
+    double? bmi = null;
+    string bmiLabel = "", bmiClass = "";
+    if (mr?.Height > 0 && mr?.Weight > 0)
+    {
+        bmi = Math.Round(mr.Weight!.Value / Math.Pow(mr.Height!.Value / 100.0, 2), 1);
+        bmiLabel = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal" : bmi < 30 ? "Overweight" : "Obese";
+        bmiClass = bmi < 18.5 ? "badge-pending" : bmi < 25 ? "badge-confirmed" : bmi < 30 ? "badge-pending" : "badge-cancelled";
+    }
+
+    var histories = Model.Appointments?
+        .Where(a => a.History != null)
+        .Select(a => a.History!)
+        .ToList() ?? new();
+
+    var upcomingAppts = Model.Appointments?
+        .Where(a => a.AppointmentDate >= DateTime.Now && a.Status != "Cancelled")
+        .OrderBy(a => a.AppointmentDate)
+        .ToList() ?? new();
+
+    var pastAppts = Model.Appointments?
+        .Where(a => a.AppointmentDate < DateTime.Now || a.Status == "Cancelled")
+        .OrderByDescending(a => a.AppointmentDate)
+        .Take(5)
+        .ToList() ?? new();
+
+    var conditions = new List<string>();
+    if (mr?.HasDiabetes == true) conditions.Add("Diabetes");
+    if (mr?.HasHypertension == true) conditions.Add("Hypertension");
+    if (mr?.HasHeartDisease == true) conditions.Add("Heart Disease");
+    if (mr?.HasAllergies == true) conditions.Add("Allergies");
+}
+
+<!-- ============================================================ -->
+<!-- PROFILE HERO HEADER                                          -->
+<!-- ============================================================ -->
+<div style="background:var(--color-surface);
+    border:1px solid var(--color-border);
+    border-radius:var(--radius-lg);
+    padding:28px 28px 0;
+    margin-bottom:20px;
+    box-shadow:var(--shadow-sm);
+    overflow:hidden;">
+
+    <!-- Top row: avatar + info + actions -->
+    <div style="display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-bottom:24px;">
+
+        <!-- Avatar -->
+        <div style="width:72px; height:72px; border-radius:50%;
+            background:@avatarBg; color:@avatarColor;
+            display:flex; align-items:center; justify-content:center;
+            font-size:26px; font-weight:700; flex-shrink:0;
+            border:3px solid var(--color-border);">
+            @initials
+        </div>
+
+        <!-- Info -->
+        <div style="flex:1; min-width:200px;">
+            <div style="font-size:22px; font-weight:700; color:var(--color-text-1); line-height:1.2;">
+                @Model.FullName
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:8px; font-size:13px; color:var(--color-text-3);">
+                <span>
+                    <i class="fa-solid fa-@(isFemale ? "venus" : "mars")" style="margin-right:4px;"></i>
+                    @Model.Gender
+                </span>
+                <span>
+                    <i class="fa-solid fa-cake-candles" style="margin-right:4px;"></i>
+                    @Model.DateOfBirth.ToString("MMM dd, yyyy")
+                    <span style="color:var(--color-text-2); font-weight:500;">(@age yrs)</span>
+                </span>
+                <span>
+                    <i class="fa-solid fa-phone" style="margin-right:4px;"></i>
+                    <span style="font-family:var(--font-mono);">@Model.PhoneNumber</span>
+                </span>
+                @if (mr != null)
+                {
+                    <span style="color:var(--color-danger-text); font-weight:600;">
+                        <i class="fa-solid fa-droplet" style="margin-right:4px;"></i>
+                        @mr.BloodType
+                    </span>
+                }
+            </div>
+
+            <!-- Condition tags -->
+            @if (conditions.Any())
+            {
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+                    @foreach (var c in conditions)
+                    {
+                        <span class="badge-status badge-cancelled" style="font-size:11px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size:9px;"></i>
+                            @c
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Quick action -->
+        <a asp-controller="PatientPortal" asp-action="AvailableSlots"
+           class="btn-primary-med" style="flex-shrink:0;">
+            <i class="fa-solid fa-calendar-plus"></i> Book Appointment
+        </a>
+
+    </div>
+
+    <!-- Stat strip -->
+    <div style="display:grid; grid-template-columns:repeat(4,1fr);
+        border-top:1px solid var(--color-border);
+        margin:0 -28px;">
+
+        @{
+            void StatCell(string icon, string value, string label, string color)
+            {
+                <div style="padding:14px 20px; text-align:center; border-right:1px solid var(--color-border);">
+                    <div style="font-size:11px; color:var(--color-text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">@label</div>
+                    <div style="font-size:20px; font-weight:700; color:@color;">@value</div>
+                </div>
+            }
+        }
+
+        @{
+            StatCell("calendar-check", (Model.Appointments?.Count() ?? 0).ToString(), "Appointments", "var(--color-text-1)");
+        }
+        @{
+            StatCell("clock-rotate-left", histories.Count.ToString(), "History Records", "var(--color-text-1)");
+        }
+        @{
+            StatCell("calendar", upcomingAppts.Count.ToString(), "Upcoming", "#1D9E75");
+        }
+        <div style="padding:14px 20px; text-align:center;">
+            <div style="font-size:11px; color:var(--color-text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">Medical Record</div>
+            <div style="font-size:13px; font-weight:600;">
+                @if (mr != null)
+                {
+                    <span style="color:#1D9E75;"><i class="fa-solid fa-circle-check"></i> On File</span>
+                }
+                else
+                {
+                    <span style="color:var(--color-danger-text);"><i class="fa-solid fa-circle-xmark"></i> Missing</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABS                                                         -->
+<!-- ============================================================ -->
+<div style="display:flex; gap:4px; margin-bottom:16px; border-bottom:1px solid var(--color-border);">
+    <button class="profile-tab active" onclick="showTab('tab-health', this)">
+        <i class="fa-solid fa-heart-pulse"></i> Health Overview
+    </button>
+    <button class="profile-tab" onclick="showTab('tab-upcoming', this)">
+        <i class="fa-solid fa-calendar-check"></i> Upcoming
+        @if (upcomingAppts.Any())
+        {
+            <span class="tab-count">@upcomingAppts.Count</span>
+        }
+    </button>
+    <button class="profile-tab" onclick="showTab('tab-history', this)">
+        <i class="fa-solid fa-clock-rotate-left"></i> Clinical History
+        @if (histories.Any())
+        {
+            <span class="tab-count">@histories.Count</span>
+        }
+    </button>
+    <button class="profile-tab" onclick="showTab('tab-past', this)">
+        <i class="fa-solid fa-rectangle-list"></i> Past Visits
+    </button>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 1 — HEALTH OVERVIEW                                      -->
+<!-- ============================================================ -->
+<div id="tab-health" class="tab-panel">
+
+    @if (mr != null)
+    {
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+
+            <!-- Vitals card -->
+            <div class="detail-card" style="max-width:unset;">
+                <div class="detail-card-header">
+                    <div class="detail-avatar-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                    <div>
+                        <div class="detail-title">Vitals</div>
+                        <div class="detail-subtitle">Physical measurements</div>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <div class="detail-label">Blood Type</div>
+                        <div class="detail-value">
+                            <span style="font-size:20px; font-weight:800; color:var(--color-danger-text);">
+                                @mr.BloodType
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Height</div>
+                        <div class="detail-value">
+                            @(mr.Height.HasValue ? $"{mr.Height} cm" : "—")
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Weight</div>
+                        <div class="detail-value">
+                            @(mr.Weight.HasValue ? $"{mr.Weight} kg" : "—")
+                        </div>
+                    </div>
+                    @if (bmi.HasValue)
+                    {
+                        <div class="detail-row">
+                            <div class="detail-label">BMI</div>
+                            <div class="detail-value">
+                                <span style="font-weight:600;">@bmi</span>
+                                <span class="badge-status @bmiClass" style="margin-left:8px; font-size:11px;">
+                                    @bmiLabel
+                                </span>
+                            </div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(mr.CurrentMedications))
+                    {
+                        <div class="detail-row">
+                            <div class="detail-label">Medications</div>
+                            <div class="detail-value" style="line-height:1.6;">@mr.CurrentMedications</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Conditions card -->
+            <div class="detail-card" style="max-width:unset;">
+                <div class="detail-card-header">
+                    <div class="detail-avatar-icon" style="background:#FEF2F2; color:#EF4444;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <div class="detail-title">Conditions & Flags</div>
+                        <div class="detail-subtitle">Chronic conditions & alerts</div>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    @{
+                        void ConditionRow(string label, bool value)
+                        {
+                            <div class="detail-row">
+                                <div class="detail-label">@label</div>
+                                <div class="detail-value">
+                                    <span class="badge-status @(value ? "badge-cancelled" : "badge-confirmed")">
+                                        @(value ? "Yes" : "No")
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    @{
+                        ConditionRow("Diabetes", mr.HasDiabetes);
+                    }
+                    @{
+                        ConditionRow("Hypertension", mr.HasHypertension);
+                    }
+                    @{
+                        ConditionRow("Heart Disease", mr.HasHeartDisease);
+                    }
+                    @{
+                        ConditionRow("Allergies", mr.HasAllergies);
+                    }
+
+                    @if (mr.HasAllergies && !string.IsNullOrWhiteSpace(mr.AllergyDetails))
+                    {
+                        <div class="detail-row">
+                            <div class="detail-label">Allergy Details</div>
+                            <div class="detail-value" style="line-height:1.6; color:var(--color-danger-text);">
+                                @mr.AllergyDetails
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(mr.ChronicDiseasesNotes))
+                    {
+                        <div class="detail-row">
+                            <div class="detail-label">Chronic Notes</div>
+                            <div class="detail-value" style="line-height:1.6;">@mr.ChronicDiseasesNotes</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="data-table-wrapper">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fa-solid fa-file-circle-xmark"></i>
+                </div>
+                <h3>No Medical Record</h3>
+                <p>Your doctor hasn't filled in your medical record yet.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 2 — UPCOMING APPOINTMENTS                                -->
+<!-- ============================================================ -->
+<div id="tab-upcoming" class="tab-panel" style="display:none;">
+    @if (upcomingAppts.Any())
+    {
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Doctor</th>
+                        <th>Specialty</th>
+                        <th>Clinic</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var appt in upcomingAppts)
+                    {
+                        var sc = appt.Status?.ToLower() switch
+                        {
+                            "confirmed" => "badge-confirmed",
+                            "pending" => "badge-pending",
+                            "cancelled" => "badge-cancelled",
+                            "completed" => "badge-completed",
+                            "needs follow up" => "badge-followup",
+                            _ => "badge-pending"
+                        };
+                        var isToday = appt.AppointmentDate.Date == DateTime.Today;
+                        <tr style="@(isToday ? "background:#F0FDF4;" : "")">
+                            <td>
+                                <div style="font-family:var(--font-mono); font-size:13px; font-weight:600;">
+                                    @appt.AppointmentDate.ToString("HH:mm")
+                                </div>
+                                <div style="font-size:11.5px; color:var(--color-text-3);">
+                                    @appt.AppointmentDate.ToString("MMM dd, yyyy")
+                                    @if (isToday)
+                                    {
+                                        <span style="color:var(--color-primary); font-weight:600; margin-left:4px;">Today</span>
+                                    }
+                                    else
+                                    {
+                                        var daysLeft = (appt.AppointmentDate.Date - DateTime.Today).Days;
+                                        <span style="margin-left:4px;">in @daysLeft day(s)</span>
+                                    }
+                                </div>
+                            </td>
+                            <td style="font-weight:500;">@appt.Doctor?.FullName</td>
+                            <td>
+                                <span class="badge-status badge-completed" style="font-size:11px;">
+                                    @appt.Doctor?.Specialty?.Description
+                                </span>
+                            </td>
+                            <td style="color:var(--color-text-2);">@appt.Clinic?.Name</td>
+                            <td><span class="badge-status @sc">@appt.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="data-table-wrapper">
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-regular fa-calendar-xmark"></i></div>
+                <h3>No upcoming appointments</h3>
+                <p>Book an appointment to get started.</p>
+                <a asp-controller="PatientPortal" asp-action="AvailableSlots"
+                   class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
+                    <i class="fa-solid fa-calendar-plus"></i> Book Now
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 3 — CLINICAL HISTORY                                     -->
+<!-- ============================================================ -->
+<div id="tab-history" class="tab-panel" style="display:none;">
+    @if (histories.Any())
+    {
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Diagnosis</th>
+                        <th>Treatment</th>
+                        <th>Worked?</th>
+                        <th>Follow Up</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var h in histories)
+                    {
+                        var hsc = h.Status?.ToLower() switch
+                        {
+                            "stable" => "badge-confirmed",
+                            "improved" => "badge-completed",
+                            "recovered" => "badge-completed",
+                            "completed" => "badge-completed",
+                            "needs follow up" => "badge-followup",
+                            _ => "badge-pending"
+                        };
+                        var isOverdue = h.FollowUpDate.HasValue
+                            && h.FollowUpDate.Value.Date < DateTime.Today
+                            && h.Status?.ToLower() == "needs follow up";
+                        <tr>
+                            <td style="font-family:var(--font-mono); font-size:12px; color:var(--color-text-3);">
+                                @h.Appointment?.AppointmentDate.ToString("MMM dd, yyyy")
+                            </td>
+                            <td style="max-width:180px; font-size:13px;">
+                                @(h.Diagnosis?.Length > 55
+                                    ? h.Diagnosis.Substring(0, 55) + "…"
+                                    : h.Diagnosis ?? "—")
+                            </td>
+                            <td style="max-width:180px; font-size:13px; color:var(--color-text-2);">
+                                @(h.Treatment?.Length > 55
+                                    ? h.Treatment.Substring(0, 55) + "…"
+                                    : h.Treatment ?? "—")
+                            </td>
+                            <td>
+                                <span class="badge-status @(h.DidTreatmentWork ? "badge-confirmed" : "badge-cancelled")">
+                                    @(h.DidTreatmentWork ? "Yes" : "No")
+                                </span>
+                            </td>
+                            <td style="font-size:12px; font-family:var(--font-mono);
+                                @(isOverdue ? "color:var(--color-danger-text); font-weight:600;" : "")">
+                                @if (h.FollowUpDate.HasValue)
+                                {
+                                    @h.FollowUpDate.Value.ToString("MMM dd, yyyy")
+                                    @if (isOverdue)
+                                    {
+                                        <text> ⚠</text>
+                                    }
+                                }
+                                else
+                                {
+                                    <text>—</text>
+                                }
+                            </td>
+                            <td><span class="badge-status @hsc">@(h.Status ?? "—")</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="data-table-wrapper">
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <h3>No clinical history</h3>
+                <p>Your doctor will record history after each appointment.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 4 — PAST VISITS                                         -->
+<!-- ============================================================ -->
+<div id="tab-past" class="tab-panel" style="display:none;">
+    @if (pastAppts.Any())
+    {
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Doctor</th>
+                        <th>Clinic</th>
+                        <th>Status</th>
+                        <th>History</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var appt in pastAppts)
+                    {
+                        var sc = appt.Status?.ToLower() switch
+                        {
+                            "confirmed" => "badge-confirmed",
+                            "pending" => "badge-pending",
+                            "cancelled" => "badge-cancelled",
+                            "completed" => "badge-completed",
+                            "needs follow up" => "badge-followup",
+                            _ => "badge-pending"
+                        };
+                        <tr>
+                            <td style="font-family:var(--font-mono); font-size:12.5px;">
+                                @appt.AppointmentDate.ToString("MMM dd, yyyy · HH:mm")
+                            </td>
+                            <td style="font-weight:500;">@appt.Doctor?.FullName</td>
+                            <td style="color:var(--color-text-2);">@appt.Clinic?.Name</td>
+                            <td><span class="badge-status @sc">@appt.Status</span></td>
+                            <td>
+                                @if (appt.History != null)
+                                {
+                                    <span class="badge-status badge-confirmed" style="font-size:11px;">
+                                        <i class="fa-solid fa-circle-check" style="font-size:9px;"></i> Recorded
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="font-size:12px; color:var(--color-text-3);">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="data-table-wrapper">
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-rectangle-list"></i></div>
+                <h3>No past visits</h3>
+                <p>Your completed appointments will appear here.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ============================================================ -->
+<!-- STYLES & TABS SCRIPT                                         -->
+<!-- ============================================================ -->
+<style>
+    .profile-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 16px;
+        border: none;
+        background: transparent;
+        font-family: var(--font-main);
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--color-text-3);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition: color var(--transition), border-color var(--transition);
+    }
+
+        .profile-tab:hover {
+            color: var(--color-text-1);
+        }
+
+        .profile-tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+    .tab-count {
+        background: var(--color-primary-light);
+        color: var(--color-primary-dark);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 7px;
+        border-radius: 10px;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function showTab(id, btn) {
+            document.querySelectorAll('.tab-panel')
+                .forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.profile-tab')
+                .forEach(b => b.classList.remove('active'));
+            document.getElementById(id).style.display = 'block';
+            btn.classList.add('active');
+        }
+    </script>
+}

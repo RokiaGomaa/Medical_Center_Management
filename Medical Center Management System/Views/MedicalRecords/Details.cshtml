@@ -1,0 +1,188 @@
+﻿@model Medical_Center_Management_System.Models.MedicalRecord
+
+@{
+    ViewData["Title"] = "Medical Record Details";
+    var initials = Model.Patient?.FullName != null
+        ? string.Join("", Model.Patient.FullName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()))
+        : "?";
+
+    double? bmi = null;
+    string bmiLabel = "";
+    string bmiClass = "";
+    if (Model.Height.HasValue && Model.Weight.HasValue)
+    {
+        bmi = Math.Round(Model.Weight.Value / Math.Pow(Model.Height.Value / 100.0, 2), 1);
+        bmiLabel = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal" : bmi < 30 ? "Overweight" : "Obese";
+        bmiClass = bmi < 18.5 ? "badge-pending" : bmi < 25 ? "badge-confirmed" : bmi < 30 ? "badge-pending" : "badge-cancelled";
+    }
+}
+
+<div class="page-header">
+    <div>
+        <h1>Medical Record</h1>
+        <p>Full medical record details</p>
+    </div>
+    <a href="javascript:history.back()" class="btn-secondary-med">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- Patient header -->
+<div style="background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:16px; box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div style="width:48px; height:48px; border-radius:50%; background:var(--color-primary-light); color:var(--color-primary-dark); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; flex-shrink:0;">
+        @initials
+    </div>
+    <div style="flex:1;">
+        <div style="font-size:17px; font-weight:700;">@Model.Patient?.FullName</div>
+        <div style="font-size:12.5px; color:var(--color-text-3); margin-top:3px;">@Model.Patient?.PhoneNumber</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+        <div style="text-align:center;">
+            <div style="font-size:24px; font-weight:800; color:var(--color-danger-text);">@Model.BloodType</div>
+            <div style="font-size:10px; color:var(--color-text-3); font-weight:500;">Blood Type</div>
+        </div>
+        @if (bmi.HasValue)
+        {
+            <div style="text-align:center;">
+                <div style="font-size:22px; font-weight:700; color:var(--color-text-1);">@bmi</div>
+                <div style="font-size:10px; color:var(--color-text-3); font-weight:500;">BMI · @bmiLabel</div>
+            </div>
+        }
+    </div>
+    <div style="display:flex; gap:8px;">
+        <a href="/Patients/Details/@Model.PatientId" class="btn-secondary-med" style="font-size:12px; padding:5px 12px;">
+            <i class="fa-solid fa-user"></i> Patient Profile
+        </a>
+    </div>
+</div>
+
+<!-- Two column detail layout -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+
+    <!-- Health Overview -->
+    <div class="detail-card" style="max-width:unset;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div>
+                <div class="detail-title">Health Overview</div>
+                <div class="detail-subtitle">Physical measurements</div>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Blood Type</div>
+                <div class="detail-value" style="font-size:18px; font-weight:800; color:var(--color-danger-text);">@Model.BloodType</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Height</div>
+                <div class="detail-value">@(Model.Height.HasValue ? $"{Model.Height} cm" : "Not recorded")</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Weight</div>
+                <div class="detail-value">@(Model.Weight.HasValue ? $"{Model.Weight} kg" : "Not recorded")</div>
+            </div>
+            @if (bmi.HasValue)
+            {
+                <div class="detail-row">
+                    <div class="detail-label">BMI</div>
+                    <div class="detail-value">
+                        @bmi
+                        <span class="badge-status @bmiClass" style="margin-left:8px;">@bmiLabel</span>
+                    </div>
+                </div>
+            }
+            <div class="detail-row">
+                <div class="detail-label">Current Medications</div>
+                <div class="detail-value" style="line-height:1.6;">
+                    @(string.IsNullOrWhiteSpace(Model.CurrentMedications) ? "None" : Model.CurrentMedications)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conditions & Flags -->
+    <div class="detail-card" style="max-width:unset;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon" style="background:#FEF2F2; color:#EF4444;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <div class="detail-title">Conditions & Flags</div>
+                <div class="detail-subtitle">Chronic conditions and alerts</div>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Diabetes</div>
+                <div class="detail-value">
+                    <span class="badge-status @(Model.HasDiabetes ? "badge-cancelled" : "badge-confirmed")">
+                        @(Model.HasDiabetes ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Hypertension</div>
+                <div class="detail-value">
+                    <span class="badge-status @(Model.HasHypertension ? "badge-cancelled" : "badge-confirmed")">
+                        @(Model.HasHypertension ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Heart Disease</div>
+                <div class="detail-value">
+                    <span class="badge-status @(Model.HasHeartDisease ? "badge-cancelled" : "badge-confirmed")">
+                        @(Model.HasHeartDisease ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Allergies</div>
+                <div class="detail-value">
+                    <span class="badge-status @(Model.HasAllergies ? "badge-cancelled" : "badge-confirmed")">
+                        @(Model.HasAllergies ? "Yes" : "No")
+                    </span>
+                </div>
+            </div>
+            @if (Model.HasAllergies && !string.IsNullOrWhiteSpace(Model.AllergyDetails))
+            {
+                <div class="detail-row">
+                    <div class="detail-label">Allergy Details</div>
+                    <div class="detail-value" style="line-height:1.6;">@Model.AllergyDetails</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Chronic Notes -->
+@if (!string.IsNullOrWhiteSpace(Model.ChronicDiseasesNotes))
+{
+    <div class="detail-card" style="max-width:unset; margin-bottom:16px;">
+        <div class="detail-card-header">
+            <div class="detail-avatar-icon" style="background:#FFFBEB; color:#F59E0B;">
+                <i class="fa-solid fa-notes-medical"></i>
+            </div>
+            <div>
+                <div class="detail-title">Chronic Disease Notes</div>
+                <div class="detail-subtitle">Additional clinical observations</div>
+            </div>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Notes</div>
+                <div class="detail-value" style="line-height:1.7;">@Model.ChronicDiseasesNotes</div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Footer actions -->
+<div style="display:flex; gap:10px;">
+    <a asp-action="Edit" asp-route-id="@Model.MedicalRecordId" class="btn-primary-med">
+        <i class="fa-solid fa-pen"></i> Edit Record
+    </a>
+    <a asp-action="Delete" asp-route-id="@Model.MedicalRecordId" class="btn-danger-med">
+        <i class="fa-solid fa-trash"></i> Delete
+    </a>
+</div>

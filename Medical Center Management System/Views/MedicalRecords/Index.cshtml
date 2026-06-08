@@ -1,0 +1,181 @@
+﻿@model IEnumerable<Medical_Center_Management_System.Models.MedicalRecord>
+
+@{
+    ViewData["Title"] = "Medical Records";
+    var search = Context.Request.Query["search"].ToString();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Medical Records</h1>
+        <p>Manage all patient medical records in the system</p>
+    </div>
+    <a asp-action="Create" class="btn-primary-med">
+        <i class="fa-solid fa-plus"></i> Add Record
+    </a>
+</div>
+
+<!-- Search -->
+<div class="data-table-wrapper" style="margin-bottom:16px;">
+    <form asp-action="Index" method="get">
+        <div class="data-table-toolbar">
+            <div class="search-box" style="flex:1; min-width:240px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" value="@search"
+                       placeholder="Search by patient name or phone..." />
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn-primary-med">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
+                @if (!string.IsNullOrEmpty(search))
+                {
+                    <a asp-action="Index" class="btn-secondary-med">
+                        <i class="fa-solid fa-xmark"></i> Clear
+                    </a>
+                }
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="data-table-wrapper">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12.5px; color:var(--color-text-3);">
+            <strong style="color:var(--color-text-1);">@Model.Count()</strong> records found
+        </span>
+        @if (!string.IsNullOrEmpty(search))
+        {
+            <span style="font-size:12px; color:var(--color-primary);">
+                <i class="fa-solid fa-filter"></i> Filtered by "@search"
+            </span>
+        }
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Blood Type</th>
+                    <th>Conditions</th>
+                    <th>Height / Weight</th>
+                    <th>Medications</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = 1;
+                }
+                @foreach (var item in Model)
+                {
+                    var isMatched = !string.IsNullOrWhiteSpace(search) &&
+                    item.Patient != null &&
+                    (item.Patient.FullName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    item.Patient.PhoneNumber.Contains(search));
+
+                    var initials = item.Patient?.FullName != null
+                    ? string.Join("", item.Patient.FullName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()))
+                    : "?";
+
+                    var conditionCount = new[] { item.HasDiabetes, item.HasHypertension, item.HasHeartDisease, item.HasAllergies }
+                    .Count(c => c);
+                    <tr class="@(isMatched ? "row-highlight" : "")">
+                        <td style="color:var(--color-text-3); font-size:12px;">@i</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:34px; height:34px; border-radius:50%; background:var(--color-primary-light); color:var(--color-primary-dark); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0;">
+                                    @initials
+                                </div>
+                                <div>
+                                    <div style="font-weight:500;">@item.Patient?.FullName</div>
+                                    <div style="font-size:11.5px; color:var(--color-text-3); font-family:var(--font-mono);">@item.Patient?.PhoneNumber</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-size:15px; font-weight:700; color:var(--color-danger-text);">@item.BloodType</span>
+                        </td>
+                        <td>
+                            @if (conditionCount == 0)
+                            {
+                                <span class="badge-status badge-confirmed">None</span>
+                            }
+                            else
+                            {
+                                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                                    @if (item.HasDiabetes)
+                                    {
+                                        <span class="badge-status badge-cancelled" style="font-size:10.5px;">Diabetes</span>
+                                    }
+                                    @if (item.HasHypertension)
+                                    {
+                                        <span class="badge-status badge-cancelled" style="font-size:10.5px;">Hypertension</span>
+                                    }
+                                    @if (item.HasHeartDisease)
+                                    {
+                                        <span class="badge-status badge-cancelled" style="font-size:10.5px;">Heart</span>
+                                    }
+                                    @if (item.HasAllergies)
+                                    {
+                                        <span class="badge-status badge-pending" style="font-size:10.5px;">Allergies</span>
+                                    }
+                                </div>
+                            }
+                        </td>
+                        <td style="font-size:13px; color:var(--color-text-2);">
+                            @if (item.Height.HasValue || item.Weight.HasValue)
+                            {
+                                <span>@(item.Height.HasValue ? $"{item.Height}cm" : "—")</span>
+                                <span style="color:var(--color-text-3); margin:0 4px;">/</span>
+                                <span>@(item.Weight.HasValue ? $"{item.Weight}kg" : "—")</span>
+                            }
+                            else
+                            {
+
+                                <span style="color:var(--color-text-3);">Not recorded</span>
+                            }
+                        </td>
+                        <td style="font-size:12.5px; color:var(--color-text-2); max-width:160px;">
+                            @if (!string.IsNullOrWhiteSpace(item.CurrentMedications))
+                            {
+                                @(item.CurrentMedications.Length > 40 ? item.CurrentMedications.Substring(0, 40) + "…" : item.CurrentMedications)
+                            }
+                            else
+                            {
+
+                                <span style="color:var(--color-text-3);">None</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a asp-action="Details" asp-route-id="@item.MedicalRecordId" class="btn-action btn-action-view"><i class="fa-solid fa-eye"></i> View</a>
+                                <a asp-action="Edit" asp-route-id="@item.MedicalRecordId" class="btn-action btn-action-edit"><i class="fa-solid fa-pen"></i> Edit</a>
+                                <a asp-action="Delete" asp-route-id="@item.MedicalRecordId" class="btn-action btn-action-delete"><i class="fa-solid fa-trash"></i> Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-file-medical"></i></div>
+            <h3>No medical records found</h3>
+            <p>@(string.IsNullOrEmpty(search) ? "Get started by creating the first medical record." : $"No records match \"{search}\".")</p>
+            @if (string.IsNullOrEmpty(search))
+            {
+                <a asp-action="Create" class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
+                    <i class="fa-solid fa-plus"></i> Add Record
+                </a>
+            }
+        </div>
+    }
+</div>
