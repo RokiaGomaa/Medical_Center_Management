@@ -43,10 +43,16 @@
                 @if (User.IsInRole("Admin"))
                 {
                     <div class="nav-section-label">Overview</div>
-
-                    <a href="/" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                    <a asp-controller="Admin" 
+                        asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
                         <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
                         <span class="nav-label">Dashboard</span>
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Landing" class="nav-link">
+                        <span class="nav-icon"><i class="fa-solid fa-house"></i></span>
+                        <span class="nav-label">Back To Home</span>
                     </a>
 
                     <div class="nav-section-label">Management</div>
@@ -89,6 +95,7 @@
                         <span class="nav-label">Histories</span>
                     </a>
 
+
                     <div class="nav-section-label">System</div>
 
                     <a asp-controller="UserManagement"
@@ -96,6 +103,8 @@
                         <span class="nav-icon"><i class="fa-solid fa-users-gear"></i></span>
                         <span class="nav-label">User Management</span>
                     </a>
+
+
                 }
 
                 @* ======================================= *@
@@ -124,7 +133,11 @@
                         <span class="nav-label">My Appointments</span>
                     </a>
                     
-
+                          <a asp-controller="Home"
+                            asp-action="Landing"class="nav-link">
+                            <span class="nav-icon"><i class="fa-solid fa-house"></i></span>
+                            <span class="nav-label">Back To Home</span>
+                      </a>
                     
                 }
 
@@ -159,6 +172,12 @@
                         <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
                         <span class="nav-label">My Appointments</span>
                     </a>
+
+                      <a asp-controller="Home"
+                                   asp-action="Landing"class="nav-link">
+                                <span class="nav-icon"><i class="fa-solid fa-house"></i></span>
+                                <span class="nav-label">Back To Home</span>
+                            </a>
 
                 }
 

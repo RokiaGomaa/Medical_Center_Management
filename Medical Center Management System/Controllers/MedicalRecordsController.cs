@@ -3,10 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Medical_Center_Management_System.Controllers
 {
@@ -20,7 +16,23 @@ namespace Medical_Center_Management_System.Controllers
             _context = context;
         }
 
-        // Index
+        // =========================================
+        // Helper — redirect back to patient profile
+        // based on the current user's role
+        // =========================================
+
+        private IActionResult RedirectToPatient(int patientId)
+        {
+            if (User.IsInRole("Admin"))
+                return RedirectToAction("Details", "Patients", new { id = patientId });
+            else
+                return RedirectToAction("PatientProfile", "DoctorPortal", new { patientId });
+        }
+
+        // =========================================
+        // INDEX
+        // =========================================
+
         public async Task<IActionResult> Index(string? search)
         {
             var medicalRecords = _context.MedicalRecords
@@ -40,7 +52,10 @@ namespace Medical_Center_Management_System.Controllers
             return View(await medicalRecords.ToListAsync());
         }
 
-        // Details
+        // =========================================
+        // DETAILS
+        // =========================================
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -55,13 +70,21 @@ namespace Medical_Center_Management_System.Controllers
             return View(medicalRecord);
         }
 
-        // Create (GET) — receives patientId from query string when coming from Patient Details
-        public IActionResult Create(int? patientId)
+        // =========================================
+        // CREATE — GET
+        // =========================================
+
+        public IActionResult Create(int? patientId, string? returnTo)
         {
-            // If patientId is provided, pre-select it and pass patient info to view
+            // Full patient list for the standalone (no patientId) case
+            var patients = _context.Patients.ToList();
+            ViewData["PatientList"] = new SelectList(patients, "PatientId", "FullName", patientId);
+
+            ViewBag.ReturnTo = returnTo;
+
             if (patientId.HasValue)
             {
-                var patient = _context.Patients.Find(patientId.Value);
+                var patient = _context.Patients.FirstOrDefault(p => p.PatientId == patientId.Value);
                 if (patient != null)
                 {
                     ViewBag.PatientId = patientId.Value;
@@ -72,19 +95,22 @@ namespace Medical_Center_Management_System.Controllers
             }
             else
             {
-                ViewData["PatientId"] = new SelectList(_context.Patients, "PatientId", "FullName");
                 ViewBag.FromPatient = false;
             }
 
             return View();
         }
 
-        // Create (POST)
+        // =========================================
+        // CREATE — POST
+        // =========================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
             [Bind("MedicalRecordId,BloodType,HasDiabetes,HasHypertension,HasHeartDisease,HasAllergies,AllergyDetails,ChronicDiseasesNotes,CurrentMedications,Height,Weight,PatientId")]
-            MedicalRecord medicalRecord)
+            MedicalRecord medicalRecord,
+            string? returnTo)
         {
             if (await _context.MedicalRecords.AnyAsync(m => m.PatientId == medicalRecord.PatientId))
                 ModelState.AddModelError("PatientId", "This patient already has a medical record.");
@@ -98,11 +124,15 @@ namespace Medical_Center_Management_System.Controllers
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Medical record created successfully";
 
-                // Always go back to the patient's profile
-                return RedirectToAction("Details", "Patients", new { id = medicalRecord.PatientId });
+                // returnTo overrides role check — used when a specific flow needs a fixed destination
+                if (!string.IsNullOrEmpty(returnTo) && returnTo == "DoctorPortal")
+                    return RedirectToAction("PatientProfile", "DoctorPortal",
+                        new { patientId = medicalRecord.PatientId });
+
+                return RedirectToPatient(medicalRecord.PatientId);  // ✅ role-aware
             }
 
-            // Repopulate on error
+            // Repopulate on validation error
             var patient = _context.Patients.Find(medicalRecord.PatientId);
             if (patient != null)
             {
@@ -113,14 +143,19 @@ namespace Medical_Center_Management_System.Controllers
             }
             else
             {
-                ViewData["PatientId"] = new SelectList(_context.Patients, "PatientId", "FullName", medicalRecord.PatientId);
+                ViewData["PatientList"] = new SelectList(
+                    _context.Patients, "PatientId", "FullName", medicalRecord.PatientId);
                 ViewBag.FromPatient = false;
             }
 
+            ViewBag.ReturnTo = returnTo;
             return View(medicalRecord);
         }
 
-        // Edit (GET)
+        // =========================================
+        // EDIT — GET
+        // =========================================
+
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -138,7 +173,10 @@ namespace Medical_Center_Management_System.Controllers
             return View(medicalRecord);
         }
 
-        // Edit (POST)
+        // =========================================
+        // EDIT — POST
+        // =========================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id,
@@ -169,8 +207,7 @@ namespace Medical_Center_Management_System.Controllers
                     else throw;
                 }
 
-                // Return to patient profile
-                return RedirectToAction("Details", "Patients", new { id = medicalRecord.PatientId });
+                return RedirectToPatient(medicalRecord.PatientId);  // ✅ role-aware
             }
 
             var patient = _context.Patients.Find(medicalRecord.PatientId);
@@ -181,7 +218,10 @@ namespace Medical_Center_Management_System.Controllers
             return View(medicalRecord);
         }
 
-        // Delete (GET)
+        // =========================================
+        // DELETE — GET
+        // =========================================
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -195,13 +235,16 @@ namespace Medical_Center_Management_System.Controllers
             return View(medicalRecord);
         }
 
-        // Delete (POST)
+        // =========================================
+        // DELETE — POST
+        // =========================================
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var medicalRecord = await _context.MedicalRecords.FindAsync(id);
-            int? patientId = medicalRecord?.PatientId;
+            int patientId = medicalRecord?.PatientId ?? 0;
 
             if (medicalRecord != null)
                 _context.MedicalRecords.Remove(medicalRecord);
@@ -209,12 +252,15 @@ namespace Medical_Center_Management_System.Controllers
             await _context.SaveChangesAsync();
             TempData["Success"] = "Medical record deleted successfully";
 
-            // Return to patient profile if we know the patient
-            if (patientId.HasValue)
-                return RedirectToAction("Details", "Patients", new { id = patientId.Value });
+            if (patientId != 0)
+                return RedirectToPatient(patientId);  // ✅ role-aware
 
             return RedirectToAction(nameof(Index));
         }
+
+        // =========================================
+        // HELPERS
+        // =========================================
 
         private bool MedicalRecordExists(int id) =>
             _context.MedicalRecords.Any(e => e.MedicalRecordId == id);

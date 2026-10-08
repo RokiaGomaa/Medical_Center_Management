@@ -55,7 +55,7 @@
         </div>
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <a asp-action="Report" asp-route-id="@Model.PatientId"
+        <a asp-controller="DoctorPortal" asp-action="Report" asp-route-patientId="@Model.PatientId"
            class="btn-secondary-med" target="_blank"
            style="border-color:#E5E7EB;">
             <i class="fa-solid fa-file-pdf" style="color:#EF4444;"></i> Export PDF
@@ -69,20 +69,26 @@
 
     @if (!hasMedicalRecord)
     {
-        <a href="/MedicalRecords/Create"
-           style="display:flex; align-items:center; gap:16px; padding:18px 20px; background:var(--color-surface); border:2px dashed var(--color-primary); border-radius:var(--radius-lg); text-decoration:none; transition:all var(--transition);"
-           onmouseover="this.style.background='var(--color-primary-light)'"
-           onmouseout="this.style.background='var(--color-surface)'">
-            <div style="width:44px; height:44px; border-radius:var(--radius-md); background:var(--color-primary-light); color:var(--color-primary); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
-                <i class="fa-solid fa-file-medical"></i>
+              <a href="/MedicalRecords/Create?patientId=@Model.PatientId&returnTo=DoctorPortal"
+       style="display:flex; align-items:center; gap:16px; padding:18px 20px; background:var(--color-surface); border:2px dashed var(--color-primary); border-radius:var(--radius-lg); text-decoration:none; transition:all var(--transition);"
+       onmouseover="this.style.background='var(--color-primary-light)'"
+       onmouseout="this.style.background='var(--color-surface)'">
+
+        <div style="width:44px; height:44px; border-radius:var(--radius-md); background:var(--color-primary-light); color:var(--color-primary); display:flex; align-items:center; justify-content:center; font-size:20px;">
+            <i class="fa-solid fa-file-medical"></i>
+        </div>
+
+        <div>
+            <div style="font-size:14px; font-weight:600; color:var(--color-primary);">
+                <i class="fa-solid fa-plus" style="font-size:11px; margin-right:4px;"></i>
+                Create Medical Record
             </div>
-            <div>
-                <div style="font-size:14px; font-weight:600; color:var(--color-primary);">
-                    <i class="fa-solid fa-plus" style="font-size:11px; margin-right:4px;"></i>Add Medical Record
-                </div>
-                <div style="font-size:12px; color:var(--color-text-3); margin-top:2px;">No record on file — click to create one</div>
+            <div style="font-size:12px; color:var(--color-text-3); margin-top:2px;">
+                Add patient medical record
             </div>
-        </a>
+        </div>
+
+    </a>
     }
     else
     {
@@ -235,9 +241,7 @@
                 <div class="empty-state-icon"><i class="fa-solid fa-file-circle-xmark"></i></div>
                 <h3>No medical record found</h3>
                 <p>This patient doesn't have a medical record yet.</p>
-                <a href="/MedicalRecords/Create" class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
-                    <i class="fa-solid fa-plus"></i> Create Medical Record
-                </a>
+
             </div>
         </div>
     }
@@ -251,13 +255,7 @@
             <div style="padding:12px 16px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:13px; font-weight:500;">Clinical History</span>
 
-                <a asp-controller="Histories"
-                   asp-action="Create"
-                   asp-route-patientId="@Model.PatientId"
-                   class="btn-primary-med"
-                   style="font-size:12px; padding:5px 12px;">
-                    <i class="fa-solid fa-plus"></i> Add History
-                </a>
+
             </div>
             <table class="data-table">
                 <thead>
@@ -326,13 +324,6 @@
                 <h3>No history records</h3>
                 <p>No clinical history has been recorded for this patient yet.</p>
 
-                <a asp-controller="DoctorPortal"
-                   asp-action="WriteHistory"
-                   asp-route-patientId="@Model.PatientId"
-                   class="btn-primary-med"
-                   style="margin-top:14px; display:inline-flex;">
-                    <i class="fa-solid fa-plus"></i> Add History
-                </a>
             </div>
         </div>
     }

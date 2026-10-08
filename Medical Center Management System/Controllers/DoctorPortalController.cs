@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Rotativa.AspNetCore;
 
 namespace Medical_Center_Management_System.Controllers
 {
@@ -68,57 +69,32 @@ namespace Medical_Center_Management_System.Controllers
         // =========================================
 
         public async Task<IActionResult> MyAppointments(
-        string? status,
-        DateTime? date,
-        bool todayOnly = false)
+            string? status,
+            DateTime? date,
+            bool todayOnly = false)
         {
             var doctor = await GetCurrentDoctorAsync();
-
-            if (doctor == null)
-                return NotFound();
+            if (doctor == null) return NotFound();
 
             var appointments = doctor.Appointments?
                 .AsQueryable()
                 ?? Enumerable.Empty<Appointment>().AsQueryable();
 
-            // Status filter
             if (!string.IsNullOrEmpty(status))
-            {
-                appointments = appointments
-                    .Where(a => a.Status == status);
-            }
+                appointments = appointments.Where(a => a.Status == status);
 
-            // Specific date filter
             if (date.HasValue)
-            {
-                appointments = appointments
-                    .Where(a => a.AppointmentDate.Date == date.Value.Date);
-            }
+                appointments = appointments.Where(a => a.AppointmentDate.Date == date.Value.Date);
 
-            // Today's appointments only
             if (todayOnly)
-            {
-                appointments = appointments
-                    .Where(a => a.AppointmentDate.Date == DateTime.Today);
-            }
+                appointments = appointments.Where(a => a.AppointmentDate.Date == DateTime.Today);
 
-            // Order by nearest appointment
-            appointments = appointments
-                .OrderBy(a => a.AppointmentDate);
+            appointments = appointments.OrderBy(a => a.AppointmentDate);
 
-            // Statistics
-            ViewBag.TodayCount = doctor.Appointments?
-                .Count(a => a.AppointmentDate.Date == DateTime.Today) ?? 0;
-
-            ViewBag.PendingCount = doctor.Appointments?
-                .Count(a => a.Status == "Pending") ?? 0;
-
-            ViewBag.CompletedCount = doctor.Appointments?
-                .Count(a => a.Status == "Completed") ?? 0;
-
-            ViewBag.FollowUpCount = doctor.Appointments?
-                .Count(a => a.Status == "Needs Follow Up") ?? 0;
-
+            ViewBag.TodayCount = doctor.Appointments?.Count(a => a.AppointmentDate.Date == DateTime.Today) ?? 0;
+            ViewBag.PendingCount = doctor.Appointments?.Count(a => a.Status == "Pending") ?? 0;
+            ViewBag.CompletedCount = doctor.Appointments?.Count(a => a.Status == "Completed") ?? 0;
+            ViewBag.FollowUpCount = doctor.Appointments?.Count(a => a.Status == "Needs Follow Up") ?? 0;
             ViewBag.StatusFilter = status;
             ViewBag.DateFilter = date;
             ViewBag.TodayOnly = todayOnly;
@@ -132,25 +108,18 @@ namespace Medical_Center_Management_System.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(
-            int appointmentId, string status)
+        public async Task<IActionResult> UpdateStatus(int appointmentId, string status)
         {
             var doctor = await GetCurrentDoctorAsync();
             if (doctor == null) return NotFound();
 
-            var validStatuses = new[]
-            {
-                "Pending", "Confirmed", "Completed",
-                "Cancelled", "Needs Follow Up"
-            };
-
+            var validStatuses = new[] { "Pending", "Confirmed", "Completed", "Cancelled", "Needs Follow Up" };
             if (!validStatuses.Contains(status))
             {
                 TempData["Error"] = "Invalid status.";
                 return RedirectToAction(nameof(MyAppointments));
             }
 
-            // Only allow updating own appointments
             var appointment = await _context.Appointments
                 .FirstOrDefaultAsync(a =>
                     a.AppointmentId == appointmentId &&
@@ -166,9 +135,9 @@ namespace Medical_Center_Management_System.Controllers
         }
 
         // =========================================
-        // VIEW PATIENT (read full profile)
-        // Only accessible if the patient has had
-        // at least one appointment with this doctor.
+        // VIEW PATIENT PROFILE
+        // Only if the patient had at least one
+        // appointment with this doctor.
         // =========================================
 
         public async Task<IActionResult> PatientProfile(int patientId)
@@ -187,6 +156,8 @@ namespace Medical_Center_Management_System.Controllers
                     .ThenInclude(a => a.History)
                 .Include(p => p.Appointments)
                     .ThenInclude(a => a.Clinic)
+                .Include(p => p.Appointments)
+                    .ThenInclude(a => a.Doctor)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.PatientId == patientId);
 
@@ -196,86 +167,91 @@ namespace Medical_Center_Management_System.Controllers
         }
 
         // =========================================
-        // WRITE / EDIT MEDICAL RECORD
+        // MEDICAL RECORD — GET
         // =========================================
 
-        //[HttpGet]
-        //public async Task<IActionResult> MedicalRecord(int patientId)
-        //{
-        //    var doctor = await GetCurrentDoctorAsync();
-        //    if (doctor == null) return NotFound();
+        [HttpGet]
+        public async Task<IActionResult> MedicalRecord(int patientId)
+        {
+            var doctor = await GetCurrentDoctorAsync();
+            if (doctor == null) return NotFound();
 
-        //    bool hasRelation = doctor.Appointments?
-        //        .Any(a => a.PatientId == patientId) ?? false;
-        //    if (!hasRelation) return Forbid();
+            // Only doctors who treated this patient can edit their record
+            bool hasRelation = doctor.Appointments?
+                .Any(a => a.PatientId == patientId) ?? false;
 
-        //    var patient = await _context.Patients
-        //        .Include(p => p.MedicalRecord)
-        //        .AsNoTracking()
-        //        .FirstOrDefaultAsync(p => p.PatientId == patientId);
+            if (!hasRelation) return Forbid();
 
-        //    if (patient == null) return NotFound();
+            var patient = await _context.Patients
+                .Include(p => p.MedicalRecord)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.PatientId == patientId);
 
-        //    ViewBag.PatientId = patientId;
-        //    ViewBag.PatientName = patient.FullName;
+            if (patient == null) return NotFound();
 
-        //    // Return existing record or a blank one
-        //    var record = patient.MedicalRecord ?? new MedicalRecord
-        //    {
-        //        PatientId = patientId
-        //    };
+            ViewBag.PatientId = patientId;
+            ViewBag.PatientName = patient.FullName;
+            ViewBag.PatientPhone = patient.PhoneNumber;
+            ViewBag.FromPatient = true;
 
-        //    return View(record);
-        //}
+            var record = patient.MedicalRecord ?? new MedicalRecord
+            {
+                PatientId = patientId
+            };
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> MedicalRecord(MedicalRecord record)
-        //{
-        //    var doctor = await GetCurrentDoctorAsync();
-        //    if (doctor == null) return NotFound();
-
-        //    bool hasRelation = doctor.Appointments?
-        //        .Any(a => a.PatientId == record.PatientId) ?? false;
-        //    if (!hasRelation) return Forbid();
-
-        //    ModelState.Remove("Patient");
-
-        //    if (record.HasAllergies &&
-        //        string.IsNullOrWhiteSpace(record.AllergyDetails))
-        //    {
-        //        ModelState.AddModelError("AllergyDetails",
-        //            "Please enter allergy details.");
-        //    }
-
-        //    if (!ModelState.IsValid)
-        //    {
-        //        var patient = await _context.Patients
-        //            .AsNoTracking()
-        //            .FirstOrDefaultAsync(p => p.PatientId == record.PatientId);
-
-        //        ViewBag.PatientId = record.PatientId;
-        //        ViewBag.PatientName = patient?.FullName;
-        //        return View(record);
-        //    }
-
-        //    bool exists = await _context.MedicalRecords
-        //        .AnyAsync(m => m.MedicalRecordId == record.MedicalRecordId);
-
-        //    if (exists)
-        //        _context.MedicalRecords.Update(record);
-        //    else
-        //        _context.MedicalRecords.Add(record);
-
-        //    await _context.SaveChangesAsync();
-
-        //    TempData["Success"] = "Medical record saved successfully.";
-        //    return RedirectToAction(nameof(PatientProfile),
-        //        new { patientId = record.PatientId });
-        //}
+            return View(record);
+        }
 
         // =========================================
-        // WRITE HISTORY FOR AN APPOINTMENT
+        // MEDICAL RECORD — POST
+        // =========================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MedicalRecord(MedicalRecord record)
+        {
+            var doctor = await GetCurrentDoctorAsync();
+            if (doctor == null) return NotFound();
+
+            bool hasRelation = doctor.Appointments?
+                .Any(a => a.PatientId == record.PatientId) ?? false;
+
+            if (!hasRelation) return Forbid();
+
+            ModelState.Remove("Patient");
+
+            if (record.HasAllergies && string.IsNullOrWhiteSpace(record.AllergyDetails))
+                ModelState.AddModelError("AllergyDetails", "Please enter allergy details.");
+
+            if (!ModelState.IsValid)
+            {
+                var patient = await _context.Patients
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.PatientId == record.PatientId);
+
+                ViewBag.PatientId = record.PatientId;
+                ViewBag.PatientName = patient?.FullName;
+                ViewBag.PatientPhone = patient?.PhoneNumber;
+                ViewBag.FromPatient = true;
+                return View(record);
+            }
+
+            bool exists = await _context.MedicalRecords
+                .AnyAsync(m => m.MedicalRecordId == record.MedicalRecordId);
+
+            if (exists)
+                _context.MedicalRecords.Update(record);
+            else
+                _context.MedicalRecords.Add(record);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Medical record saved successfully.";
+            return RedirectToAction(nameof(PatientProfile), new { patientId = record.PatientId });
+        }
+
+        // =========================================
+        // WRITE / EDIT HISTORY — GET
         // =========================================
 
         [HttpGet]
@@ -286,6 +262,7 @@ namespace Medical_Center_Management_System.Controllers
 
             var appointment = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Clinic)
                 .Include(a => a.History)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a =>
@@ -304,6 +281,10 @@ namespace Medical_Center_Management_System.Controllers
             return View(history);
         }
 
+        // =========================================
+        // WRITE / EDIT HISTORY — POST
+        // =========================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> WriteHistory(History history)
@@ -311,7 +292,6 @@ namespace Medical_Center_Management_System.Controllers
             var doctor = await GetCurrentDoctorAsync();
             if (doctor == null) return NotFound();
 
-            // Verify the appointment belongs to this doctor
             bool owns = await _context.Appointments.AnyAsync(a =>
                 a.AppointmentId == history.AppointmentId &&
                 a.DoctorId == doctor.DoctorId);
@@ -324,9 +304,9 @@ namespace Medical_Center_Management_System.Controllers
             {
                 var appointment = await _context.Appointments
                     .Include(a => a.Patient)
+                    .Include(a => a.Clinic)
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(a =>
-                        a.AppointmentId == history.AppointmentId);
+                    .FirstOrDefaultAsync(a => a.AppointmentId == history.AppointmentId);
 
                 ViewBag.Appointment = appointment;
                 return View(history);
@@ -344,6 +324,43 @@ namespace Medical_Center_Management_System.Controllers
 
             TempData["Success"] = "Clinical history saved.";
             return RedirectToAction(nameof(MyAppointments));
+        }
+
+        // =========================================
+        // PATIENT PDF REPORT
+        // =========================================
+
+        public async Task<IActionResult> Report(int patientId)
+        {
+            var doctor = await GetCurrentDoctorAsync();
+            if (doctor == null) return NotFound();
+
+            bool hasRelation = doctor.Appointments?
+                .Any(a => a.PatientId == patientId) ?? false;
+
+            if (!hasRelation) return Forbid();
+
+            var patient = await _context.Patients
+                .Include(p => p.MedicalRecord)
+                .Include(p => p.Appointments)
+                    .ThenInclude(a => a.Doctor)
+                        .ThenInclude(d => d.Specialty)
+                .Include(p => p.Appointments)
+                    .ThenInclude(a => a.Clinic)
+                .Include(p => p.Appointments)
+                    .ThenInclude(a => a.History)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.PatientId == patientId);
+
+            if (patient == null) return NotFound();
+
+            return new ViewAsPdf("~/Views/Patients/report.cshtml", patient)
+            {
+                FileName = $"Patient_Report_{patient.FullName.Replace(" ", "_")}_{DateTime.Today:yyyyMMdd}.pdf",
+                PageSize = Rotativa.AspNetCore.Options.Size.A4,
+                PageMargins = new Rotativa.AspNetCore.Options.Margins(15, 15, 15, 15),
+                CustomSwitches = "--print-media-type --disable-smart-shrinking"
+            };
         }
 
         // =========================================

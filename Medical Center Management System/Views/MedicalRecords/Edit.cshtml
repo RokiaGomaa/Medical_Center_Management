@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Edit Medical Record";
+    int patientId = (int)ViewBag.PatientId;
 }
 
 <div class="page-header">
@@ -9,9 +10,20 @@
         <h1>Edit Medical Record</h1>
         <p>Update medical record for <strong>@ViewBag.PatientName</strong></p>
     </div>
-    <a href="/Patients/Details/@ViewBag.PatientId" class="btn-secondary-med">
-        <i class="fa-solid fa-arrow-left"></i> Back
-    </a>
+    @if (User.IsInRole("Admin"))
+    {
+            <a asp-controller="Patients" asp-action="Details"
+               asp-route-id="@patientId" class="btn-secondary-med">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+    }
+    else
+    {
+            <a asp-controller="DoctorPortal" asp-action="PatientProfile"
+               asp-route-patientId="@patientId" class="btn-secondary-med">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+    }
 </div>
 
 <!-- Patient info banner -->
@@ -25,7 +37,7 @@
     </div>
     <div style="margin-left:auto;">
         <span class="badge-status badge-confirmed">
-            <i class="fa-solid fa-link" style="font-size:10px;"></i> Editing existing record
+            <i class="fa-solid fa-pen" style="font-size:10px;"></i> Editing existing record
         </span>
     </div>
 </div>
@@ -33,7 +45,6 @@
 <form asp-action="Edit" method="post">
     <div asp-validation-summary="ModelOnly" class="validation-summary-errors" style="max-width:720px; margin-bottom:16px;"></div>
 
-    <!-- Hidden fields — patient is fixed, not changeable in Edit -->
     <input type="hidden" asp-for="MedicalRecordId" />
     <input type="hidden" asp-for="PatientId" />
 
@@ -53,7 +64,7 @@
                         <option value="">— Select —</option>
                         @foreach (var bt in new[] { "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-" })
                         {
-                            <option value="@bt" selected="@(Model.BloodType == bt)">@bt</option>
+                                <option value="@bt" selected="@(Model.BloodType == bt)">@bt</option>
                         }
                     </select>
                     <span asp-validation-for="BloodType" class="field-validation-error"></span>
@@ -84,7 +95,7 @@
         <!-- RIGHT: Conditions -->
         <div class="form-card" style="max-width:unset;">
             <div class="form-card-header">
-                <h2><i class="fa-solid fa-triangle-exclamation" style="color:#EF4444; margin-right:8px;"></i>Conditions & Flags</h2>
+                <h2><i class="fa-solid fa-triangle-exclamation" style="color:#EF4444; margin-right:8px;"></i>Conditions &amp; Flags</h2>
                 <p>Chronic conditions and allergy info</p>
             </div>
             <div class="form-card-body">
@@ -133,7 +144,16 @@
         <button type="submit" class="btn-primary-med">
             <i class="fa-solid fa-floppy-disk"></i> Save Changes
         </button>
-        <a href="/Patients/Details/@ViewBag.PatientId" class="btn-secondary-med">Cancel</a>
+        @if (User.IsInRole("Admin"))
+        {
+                <a asp-controller="Patients" asp-action="Details"
+                   asp-route-id="@patientId" class="btn-secondary-med">Cancel</a>
+        }
+        else
+        {
+                <a asp-controller="DoctorPortal" asp-action="PatientProfile"
+                   asp-route-patientId="@patientId" class="btn-secondary-med">Cancel</a>
+        }
     </div>
 </form>
 
@@ -141,11 +161,11 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
-        const check = document.getElementById('hasAllergiesCheck');
-        const group = document.getElementById('allergyDetailsGroup');
-        function toggleAllergy() { group.style.display = check.checked ? 'block' : 'none'; }
-        check.addEventListener('change', toggleAllergy);
-        toggleAllergy();
-    </script>
+        <script>
+            const check = document.getElementById('hasAllergiesCheck');
+            const group = document.getElementById('allergyDetailsGroup');
+            function toggleAllergy() { group.style.display = check.checked ? 'block' : 'none'; }
+            check.addEventListener('change', toggleAllergy);
+            toggleAllergy();
+        </script>
 }

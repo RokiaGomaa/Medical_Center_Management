@@ -74,12 +74,14 @@ namespace Medical_Center_Management_System.Data
                 var pedia = context.Specialties.First(s => s.Name == "Pediatrics");
                 var ortho = context.Specialties.First(s => s.Name == "Orthopedics");
 
+                string centerAddress = "Nasr City, Cairo";
+
                 context.Clinics.AddRange(
                     new Clinic
                     {
                         Name = "Cardiology Clinic",
-                        Address = "Nasr City, Cairo",
-                        PhoneNumber = "01011112222",
+                        Address = centerAddress,
+                        PhoneNumber = "01011112221",
                         Price = 300,
                         MaxPatients = 20,
                         StartTime = new TimeSpan(9, 0, 0),
@@ -90,8 +92,8 @@ namespace Medical_Center_Management_System.Data
                     new Clinic
                     {
                         Name = "Dermatology Clinic",
-                        Address = "Heliopolis, Cairo",
-                        PhoneNumber = "01022223333",
+                        Address = centerAddress,
+                        PhoneNumber = "01011112222",
                         Price = 250,
                         MaxPatients = 25,
                         StartTime = new TimeSpan(10, 0, 0),
@@ -102,8 +104,8 @@ namespace Medical_Center_Management_System.Data
                     new Clinic
                     {
                         Name = "Neurology Clinic",
-                        Address = "6th October, Giza",
-                        PhoneNumber = "01033334444",
+                        Address = centerAddress,
+                        PhoneNumber = "01011112223",
                         Price = 400,
                         MaxPatients = 15,
                         StartTime = new TimeSpan(11, 0, 0),
@@ -114,8 +116,8 @@ namespace Medical_Center_Management_System.Data
                     new Clinic
                     {
                         Name = "Pediatrics Clinic",
-                        Address = "Maadi, Cairo",
-                        PhoneNumber = "01044445555",
+                        Address = centerAddress,
+                        PhoneNumber = "01011112224",
                         Price = 200,
                         MaxPatients = 30,
                         StartTime = new TimeSpan(9, 30, 0),
@@ -126,8 +128,8 @@ namespace Medical_Center_Management_System.Data
                     new Clinic
                     {
                         Name = "Orthopedics Clinic",
-                        Address = "Dokki, Giza",
-                        PhoneNumber = "01055556666",
+                        Address = centerAddress,
+                        PhoneNumber = "01011112225",
                         Price = 350,
                         MaxPatients = 18,
                         StartTime = new TimeSpan(10, 30, 0),

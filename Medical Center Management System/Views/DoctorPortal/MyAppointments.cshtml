@@ -20,7 +20,7 @@
             <select name="status" class="filter-select">
                 <option value="">All Statuses</option>
                 @foreach (var s in new[]
-                { "Pending","Confirmed","Completed","Cancelled","Needs Follow Up" })
+                { "Pending","Confirmed","Cancelled","Needs Follow Up" })
                 {
                     <option value="@s" selected="@(statusFilter == s)">@s</option>
                 }

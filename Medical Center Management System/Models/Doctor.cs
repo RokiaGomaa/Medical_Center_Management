@@ -39,6 +39,10 @@ namespace Medical_Center_Management_System.Models
 
         public int YearsOfExperience { get; set; }
 
+        //[Required(ErrorMessage = "Qualification is required")]
+        //[StringLength(50)]
+        //public string Qualification { get; set; }
+
 
         // ==============================
         // Relation with Appointment

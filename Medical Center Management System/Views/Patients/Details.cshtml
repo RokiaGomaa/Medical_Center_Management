@@ -20,6 +20,12 @@
                                 .ToList() ?? new();
     bool hasHistories = histories.Any();
 }
+@if (TempData["Error"] != null)
+{
+        <div class="alert alert-danger" style="margin-bottom:16px;">
+        @TempData["Error"]
+        </div>
+}
 
 <div class="page-header">
     <div>
@@ -74,7 +80,7 @@
 
     @if (!hasMedicalRecord)
     {
-        <a href="/MedicalRecords/Create"
+            <a href="/MedicalRecords/Create?patientId=@Model.PatientId"
                style="display:flex; align-items:center; gap:16px; padding:18px 20px; background:var(--color-surface); border:2px dashed var(--color-primary); border-radius:var(--radius-lg); text-decoration:none; transition:all var(--transition);"
                onmouseover="this.style.background='var(--color-primary-light)'"
                onmouseout="this.style.background='var(--color-surface)'">
@@ -270,9 +276,7 @@
                 <div class="empty-state-icon"><i class="fa-solid fa-file-circle-xmark"></i></div>
                 <h3>No medical record found</h3>
                 <p>This patient doesn't have a medical record yet.</p>
-                <a href="/MedicalRecords/Create" class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
-                    <i class="fa-solid fa-plus"></i> Create Medical Record
-                </a>
+
             </div>
         </div>
     }
@@ -285,7 +289,7 @@
         <div class="data-table-wrapper">
             <div style="padding:12px 16px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:13px; font-weight:500;">All Appointments</span>
-                <a href="/Appointments/Create" class="btn-primary-med" style="font-size:12px; padding:5px 12px;">
+                   <a href="/Appointments/Create?patientId=@Model.PatientId"class="btn-primary-med"style="font-size:12px; padding:5px 12px;">
                     <i class="fa-solid fa-plus"></i> Book Another
                 </a>
             </div>
@@ -354,7 +358,7 @@
                 <div class="empty-state-icon"><i class="fa-regular fa-calendar-xmark"></i></div>
                 <h3>No appointments yet</h3>
                 <p>This patient has no appointment history.</p>
-                <a href="/Appointments/Create" class="btn-primary-med" style="margin-top:14px; display:inline-flex;">
+                 <a href="/Appointments/Create?patientId=@Model.PatientId"class="btn-primary-med"style="margin-top:14px; display:inline-flex;">
                     <i class="fa-solid fa-plus"></i> Book Appointment
                 </a>
             </div>
@@ -370,13 +374,6 @@
             <div style="padding:12px 16px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:13px; font-weight:500;">Clinical History</span>
 
-                <a asp-controller="Histories"
-                       asp-action="Create"
-                       asp-route-patientId="@Model.PatientId"
-                       class="btn-primary-med"
-                       style="font-size:12px; padding:5px 12px;">
-                    <i class="fa-solid fa-plus"></i> Add History
-                </a>
             </div>
             <table class="data-table">
                 <thead>
@@ -445,13 +442,6 @@
                 <h3>No history records</h3>
                 <p>No clinical history has been recorded for this patient yet.</p>
 
-                <a asp-controller="Histories"
-                       asp-action="Create"
-                       asp-route-patientId="@Model.PatientId"
-                       class="btn-primary-med"
-                       style="margin-top:14px; display:inline-flex;">
-                    <i class="fa-solid fa-plus"></i> Add History
-                </a>
             </div>
         </div>
     }

@@ -183,7 +183,7 @@ namespace Medical_Center_Management_System.Controllers
         private IActionResult RedirectByRole()
         {
             if (User.IsInRole("Admin"))
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Admin");
 
             if (User.IsInRole("Doctor"))
                 return RedirectToAction("Index", "DoctorPortal");

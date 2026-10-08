@@ -93,7 +93,7 @@ namespace Medical_Center_Management_System.Controllers
                 "DoctorId",
                 "FullName");
 
-            return View();
+            return View(user);
         }
 
         [HttpPost]
@@ -159,4 +159,6 @@ namespace Medical_Center_Management_System.Controllers
         public ApplicationUser User { get; set; } = null!;
         public List<string> Roles { get; set; } = new();
     }
+
+
 }

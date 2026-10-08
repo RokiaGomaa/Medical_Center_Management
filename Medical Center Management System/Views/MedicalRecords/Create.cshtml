@@ -17,11 +17,20 @@
             <p>Create a new medical record for a patient</p>
         }
     </div>
+
     @if (fromPatient)
-    {
-        <a href="/Patients/Details/@ViewBag.PatientId" class="btn-secondary-med">
-            <i class="fa-solid fa-arrow-left"></i> Back to Patient
-        </a>
+    {   
+        @if (User.IsInRole("Admin"))
+        {
+                     <a href="/Patients/Details/@ViewBag.PatientId" class="btn-secondary-med">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Patient
+                    </a>
+        }
+        else
+        {
+                <a asp-controller="DoctorPortal" asp-action="PatientProfile" 
+                asp-route-patientId="@ViewBag.PatientId" class="btn-secondary-med"><i class="fa-solid fa-arrow-left"></i> Back to Patient</a>
+        }
     }
     else
     {
@@ -57,6 +66,7 @@
     {
         <!-- Hidden — auto filled -->
         <input type="hidden" name="PatientId" value="@ViewBag.PatientId" />
+            <input type="hidden" name="returnTo" value="@ViewBag.ReturnTo" />
     }
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:720px;">
@@ -73,7 +83,7 @@
                 {
                     <div class="form-group-med">
                         <label asp-for="PatientId">Patient</label>
-                        <select asp-for="PatientId" class="form-control-med" asp-items="ViewBag.PatientId">
+                            <select asp-for="PatientId" class="form-control-med" asp-items="ViewBag.PatientList">
                             <option value="">— Select patient —</option>
                         </select>
                         <span asp-validation-for="PatientId" class="field-validation-error"></span>
@@ -169,13 +179,26 @@
         <button type="submit" class="btn-primary-med">
             <i class="fa-solid fa-floppy-disk"></i> Save & Return to Patient
         </button>
+
         @if (fromPatient)
-        {
-            <a href="/Patients/Details/@ViewBag.PatientId" class="btn-secondary-med">Cancel</a>
+        {   
+            @if (User.IsInRole("Admin"))
+            {
+                             <a href="/Patients/Details/@ViewBag.PatientId" class="btn-secondary-med">
+                                <i class="fa-solid fa-arrow-left"></i> Cancel
+                            </a>
+            }
+            else
+            {
+                        <a asp-controller="DoctorPortal" asp-action="PatientProfile" 
+                         asp-route-patientId="@ViewBag.PatientId" class="btn-secondary-med"><i class="fa-solid fa-arrow-left"></i> Cancel</a>
+            }
         }
         else
         {
-            <a href="javascript:history.back()" class="btn-secondary-med">Cancel</a>
+            <a href="javascript:history.back()" class="btn-secondary-med">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
         }
     </div>
 </form>

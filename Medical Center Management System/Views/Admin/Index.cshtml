@@ -1,0 +1,129 @@
+﻿@model DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var recentAppts = Model.RecentAppointments;
+}
+
+<div class="stat-grid">
+
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#E1F5EE; color:#1D9E75;">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stat-card-label">Total Patients</div>
+        <div class="stat-card-value">@Model.TotalPatients</div>
+        <div class="stat-card-sub">Registered in system</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#EFF6FF; color:#3B82F6;">
+            <i class="fa-solid fa-user-doctor"></i>
+        </div>
+        <div class="stat-card-label">Doctors</div>
+        <div class="stat-card-value">@Model.TotalDoctors</div>
+        <div class="stat-card-sub">Active physicians</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#FFFBEB; color:#F59E0B;">
+            <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div class="stat-card-label">Today's Appointments</div>
+        <div class="stat-card-value">@Model.TodayAppointments</div>
+        <div class="stat-card-sub">Scheduled for today</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#FEF2F2; color:#EF4444;">
+            <i class="fa-solid fa-hospital"></i>
+        </div>
+        <div class="stat-card-label">Clinics</div>
+        <div class="stat-card-value">@Model.TotalClinics</div>
+        <div class="stat-card-sub">Active locations</div>
+    </div>
+
+</div>
+
+<div class="data-table-wrapper">
+
+    <div class="data-table-toolbar">
+        <div>
+            <div style="font-size:14px;font-weight:600;">Recent Appointments</div>
+            <div style="font-size:12px;">Latest @recentAppts.Count scheduled visits</div>
+        </div>
+
+        <a asp-controller="Appointments"
+           asp-action="Index" class="btn-primary-med">
+            <i class="fa-solid fa-arrow-right"></i> View all
+        </a>
+    </div>
+
+    @if (recentAppts.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Clinic</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var appt in recentAppts)
+                {
+                    var statusClass = appt.Status?.ToLower() switch
+                    {
+                        "confirmed" => "badge-confirmed",
+                        "pending" => "badge-pending",
+                        "cancelled" => "badge-cancelled",
+                        "completed" => "badge-completed",
+                        "needs follow up" => "badge-followup",
+                        _ => "badge-pending"
+                    };
+
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="width:30px;height:30px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;">
+                                    @(appt.Patient?.FullName?.Substring(0, 1).ToUpper() ?? "?")
+                                </div>
+                                <span>@appt.Patient?.FullName</span>
+                            </div>
+                        </td>
+
+                        <td>@appt.Doctor?.FullName</td>
+                        <td>@appt.Clinic?.Name</td>
+
+                        <td>
+                            @appt.AppointmentDate.ToString("MMM dd, yyyy HH:mm")
+                        </td>
+
+                        <td>
+                            <span class="badge-status @statusClass">
+                                @appt.Status
+                            </span>
+                        </td>
+
+                        <td>
+                            <a href="/Appointments/Details/@appt.AppointmentId" class="btn-action btn-action-view">View</a> |
+                            <a href="/Appointments/Edit/@appt.AppointmentId" class="btn-action btn-action-edit">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="empty-state">
+            <h3>No appointments yet</h3>
+            <p>Appointments you create will appear here.</p>
+        </div>
+    }
+
+</div>

@@ -11,7 +11,7 @@
         <h1>@(isEdit ? "Edit" : "Write") Clinical History</h1>
         <p>@(isEdit ? "Update the existing" : "Record a new") history entry for this appointment</p>
     </div>
-    <a href="javascript:history.back()" class="btn-secondary-med">
+    <a asp-controller="DoctorPortal" asp-action="MyAppointments" class="btn-secondary-med">
         <i class="fa-solid fa-arrow-left"></i> Back to Appointments
     </a>
 </div>
@@ -19,51 +19,49 @@
 <!-- Appointment context banner -->
 @if (appointment != null)
 {
-    <div style="background:var(--color-primary-light); border:1px solid #A7E8CF;
+        <div style="background:var(--color-primary-light); border:1px solid #A7E8CF;
         border-radius:var(--radius-lg); padding:14px 20px; margin-bottom:20px;
         display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
 
-        <!-- Patient initials -->
-        <div style="width:44px; height:44px; border-radius:50%;
+            <div style="width:44px; height:44px; border-radius:50%;
             background:var(--color-primary); color:white;
             display:flex; align-items:center; justify-content:center;
             font-size:15px; font-weight:700; flex-shrink:0;">
             @(string.Join("", (appointment.Patient?.FullName ?? "?")
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Take(2).Select(w => w[0].ToString().ToUpper())))
-        </div>
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .Take(2).Select(w => w[0].ToString().ToUpper())))
+            </div>
 
-        <div style="flex:1;">
-            <div style="font-weight:600; color:var(--color-primary-dark); font-size:14px;">
+            <div style="flex:1;">
+                <div style="font-weight:600; color:var(--color-primary-dark); font-size:14px;">
                 @appointment.Patient?.FullName
-            </div>
-            <div style="font-size:12px; color:var(--color-primary); margin-top:3px;
+                </div>
+                <div style="font-size:12px; color:var(--color-primary); margin-top:3px;
                 display:flex; gap:14px; flex-wrap:wrap;">
-                <span>
-                    <i class="fa-regular fa-calendar" style="margin-right:4px;"></i>
+                    <span>
+                        <i class="fa-regular fa-calendar" style="margin-right:4px;"></i>
                     @appointment.AppointmentDate.ToString("dddd, MMMM dd yyyy · HH:mm")
-                </span>
-                <span>
-                    <i class="fa-solid fa-hospital" style="margin-right:4px;"></i>
+                    </span>
+                    <span>
+                        <i class="fa-solid fa-hospital" style="margin-right:4px;"></i>
                     @appointment.Clinic?.Name
-                </span>
-                <span style="font-family:var(--font-mono);">
+                    </span>
+                    <span style="font-family:var(--font-mono);">
                     @appointment.Patient?.PhoneNumber
+                    </span>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                <span class="badge-status @(isEdit ? "badge-completed" : "badge-pending")"
+                      style="font-size:11px;">
+                @(isEdit ? "Editing existing record" : "New record")
+                </span>
+                <span style="font-size:11px; color:var(--color-primary);">
+                    Appointment #@appointment.AppointmentId
                 </span>
             </div>
         </div>
-
-        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
-            <span class="badge-status @(isEdit ? "badge-completed" : "badge-pending")"
-                  style="font-size:11px;">
-                @(isEdit ? "Editing existing record" : "New record")
-            </span>
-            <span style="font-size:11px; color:var(--color-primary);">
-                Appointment #@appointment.AppointmentId
-            </span>
-        </div>
-
-    </div>
 }
 
 <!-- Form -->
@@ -77,18 +75,16 @@
         <p>Fill in the diagnosis, treatment and follow-up details</p>
     </div>
 
-    <form asp-action="WriteHistory" method="post">
+    <form asp-controller="DoctorPortal" asp-action="WriteHistory" method="post">
         <div class="form-card-body">
 
             <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
 
-            <!-- Hidden fields — required by controller -->
+            <!-- Hidden fields -->
             <input type="hidden" asp-for="HistoryId" />
             <input type="hidden" asp-for="AppointmentId" />
 
-            <!-- ======================== -->
-            <!-- Diagnosis & Treatment    -->
-            <!-- ======================== -->
+            <!-- Diagnosis & Treatment -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                 <div class="form-group-med">
                     <label asp-for="Diagnosis">
@@ -110,9 +106,7 @@
                 </div>
             </div>
 
-            <!-- ======================== -->
-            <!-- Doctor Notes             -->
-            <!-- ======================== -->
+            <!-- Doctor Notes -->
             <div class="form-group-med">
                 <label asp-for="DoctorNotes">
                     Doctor Notes
@@ -123,9 +117,7 @@
                 <span asp-validation-for="DoctorNotes" class="field-validation-error"></span>
             </div>
 
-            <!-- ======================== -->
-            <!-- Follow Up & Status       -->
-            <!-- ======================== -->
+            <!-- Follow Up & Status -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                 <div class="form-group-med">
                     <label asp-for="FollowUpDate">Follow Up Date</label>
@@ -150,9 +142,7 @@
                 </div>
             </div>
 
-            <!-- ======================== -->
-            <!-- Checkboxes               -->
-            <!-- ======================== -->
+            <!-- Checkboxes -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;
                 background:var(--color-surface-2); border-radius:var(--radius-md);
                 padding:16px; border:1px solid var(--color-border);">
@@ -170,7 +160,6 @@
                         Treatment was effective
                     </label>
                 </div>
-
             </div>
 
         </div>
@@ -181,7 +170,7 @@
                 <i class="fa-solid fa-floppy-disk"></i>
                 @(isEdit ? "Save Changes" : "Save History")
             </button>
-            <a href="javascript:history.back()" class="btn-secondary-med">
+            <a asp-controller="DoctorPortal" asp-action="MyAppointments" class="btn-secondary-med">
                 Cancel
             </a>
         </div>

@@ -73,9 +73,10 @@ namespace Medical_Center_Management_System.Controllers
         // =========================================
 
         public async Task<IActionResult> AvailableSlots(
-    DateTime? date,
-    int? clinicId)
-        {
+            DateTime? date,
+            int? clinicId,
+            string? search)
+                {
             var targetDate = date?.Date ?? DateTime.Today;
 
             ViewBag.SelectedDate = targetDate;
@@ -112,6 +113,16 @@ namespace Medical_Center_Management_System.Controllers
             }
 
             var doctors = await doctorsQuery.ToListAsync();
+
+            // Filter by doctor name search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                doctors = doctors
+                    .Where(d => d.FullName.Contains(search, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            ViewBag.Search = search;
 
             var result = new List<DoctorSlotsVM>();
 

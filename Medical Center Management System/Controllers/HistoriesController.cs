@@ -17,7 +17,23 @@ namespace Medical_Center_Management_System.Controllers
             _context = context;
         }
 
-        // Index
+        // =========================================
+        // Helper — redirect back to patient profile
+        // based on the current user's role
+        // =========================================
+
+        private IActionResult RedirectToPatient(int patientId)
+        {
+            if (User.IsInRole("Admin"))
+                return RedirectToAction("Details", "Patients", new { id = patientId });
+            else
+                return RedirectToAction("PatientProfile", "DoctorPortal", new { patientId });
+        }
+
+        // =========================================
+        // INDEX
+        // =========================================
+
         public async Task<IActionResult> Index(string search, int pageNumber = 1)
         {
             var histories = _context.Histories
@@ -35,22 +51,20 @@ namespace Medical_Center_Management_System.Controllers
                 histories = histories.Where(h =>
                     (h.Diagnosis != null && h.Diagnosis.Contains(search)) ||
                     (h.Treatment != null && h.Treatment.Contains(search)) ||
-                    (h.Status != null && h.Status.Contains(search))||
+                    (h.Status != null && h.Status.Contains(search)) ||
                     h.Appointment.Patient.FullName.Contains(search) ||
                     h.Appointment.Doctor.FullName.Contains(search) ||
                     h.Appointment.Clinic.Name.Contains(search));
             }
 
             int pageSize = 5;
-
-            return View(await PaginatedList<History>.CreateAsync(
-                histories,
-                pageNumber,
-                pageSize
-            ));
+            return View(await PaginatedList<History>.CreateAsync(histories, pageNumber, pageSize));
         }
 
-        // Details
+        // =========================================
+        // DETAILS
+        // =========================================
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -71,12 +85,25 @@ namespace Medical_Center_Management_System.Controllers
             return View(history);
         }
 
-        // Create (GET) — receives patientId from query string when coming from Patient Details
-        public IActionResult Create(int? patientId)
+        // =========================================
+        // CREATE — GET
+        // =========================================
+
+        public async Task<IActionResult> Create(int? patientId, int? appointmentId)
         {
             if (patientId.HasValue)
             {
-                // Load only appointments for this patient that don't have a history yet
+                // If the patient has no appointments at all, send them to book one first
+                bool hasAppointment = await _context.Appointments
+                    .AnyAsync(a => a.PatientId == patientId.Value);
+
+                if (!hasAppointment)
+                {
+                    TempData["Error"] = "Book appointment first";
+                    return RedirectToAction("Create", "Appointments",
+                        new { patientId = patientId.Value, returnToHistory = true });
+                }
+
                 LoadAppointmentsDropDown(patientId: patientId.Value);
 
                 var patient = _context.Patients.Find(patientId.Value);
@@ -97,7 +124,10 @@ namespace Medical_Center_Management_System.Controllers
             return View();
         }
 
-        // Create (POST)
+        // =========================================
+        // CREATE — POST
+        // =========================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
@@ -118,15 +148,14 @@ namespace Medical_Center_Management_System.Controllers
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "History created successfully";
 
-                // Go back to the patient's profile
                 var appointment = await _context.Appointments.FindAsync(history.AppointmentId);
                 if (appointment != null)
-                    return RedirectToAction("Details", "Patients", new { id = appointment.PatientId });
+                    return RedirectToPatient(appointment.PatientId);  // ✅ role-aware
 
                 return RedirectToAction(nameof(Index));
             }
 
-            // Repopulate on error
+            // Repopulate on validation error
             var patientIdFromAppt = history.AppointmentId.HasValue
                 ? _context.Appointments.Find(history.AppointmentId.Value)?.PatientId
                 : null;
@@ -149,7 +178,10 @@ namespace Medical_Center_Management_System.Controllers
             return View(history);
         }
 
-        // Edit (GET)
+        // =========================================
+        // EDIT — GET
+        // =========================================
+
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -170,7 +202,10 @@ namespace Medical_Center_Management_System.Controllers
             return View(history);
         }
 
-        // Edit (POST)
+        // =========================================
+        // EDIT — POST
+        // =========================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(
@@ -202,10 +237,9 @@ namespace Medical_Center_Management_System.Controllers
                     else throw;
                 }
 
-                // Go back to the patient's profile
                 var appointment = await _context.Appointments.FindAsync(history.AppointmentId);
                 if (appointment != null)
-                    return RedirectToAction("Details", "Patients", new { id = appointment.PatientId });
+                    return RedirectToPatient(appointment.PatientId);  // ✅ role-aware
 
                 return RedirectToAction(nameof(Index));
             }
@@ -213,7 +247,9 @@ namespace Medical_Center_Management_System.Controllers
             LoadAppointmentsDropDown(history.AppointmentId);
 
             var appt = history.AppointmentId.HasValue
-                ? await _context.Appointments.Include(a => a.Patient).FirstOrDefaultAsync(a => a.AppointmentId == history.AppointmentId)
+                ? await _context.Appointments
+                    .Include(a => a.Patient)
+                    .FirstOrDefaultAsync(a => a.AppointmentId == history.AppointmentId)
                 : null;
 
             ViewBag.PatientId = appt?.PatientId;
@@ -223,7 +259,10 @@ namespace Medical_Center_Management_System.Controllers
             return View(history);
         }
 
-        // Delete (GET)
+        // =========================================
+        // DELETE — GET
+        // =========================================
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -243,7 +282,10 @@ namespace Medical_Center_Management_System.Controllers
             return View(history);
         }
 
-        // Delete (POST)
+        // =========================================
+        // DELETE — POST
+        // =========================================
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -261,17 +303,18 @@ namespace Medical_Center_Management_System.Controllers
                 TempData["Success"] = "History deleted successfully";
             }
 
-            // Go back to patient profile
             if (patientId.HasValue)
-                return RedirectToAction("Details", "Patients", new { id = patientId.Value });
+                return RedirectToPatient(patientId.Value);  // ✅ role-aware
 
             return RedirectToAction(nameof(Index));
         }
 
-        // Helpers
+        // =========================================
+        // HELPERS
+        // =========================================
+
         private void LoadAppointmentsDropDown(int? selectedAppointmentId = null, int? patientId = null)
         {
-            // Get appointments that don't have a history yet (or the currently selected one)
             var appointmentsQuery = _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Doctor)
@@ -281,7 +324,6 @@ namespace Medical_Center_Management_System.Controllers
                     h.AppointmentId == a.AppointmentId &&
                     h.AppointmentId != selectedAppointmentId));
 
-            // Filter by patient if coming from patient profile
             if (patientId.HasValue)
                 appointmentsQuery = appointmentsQuery.Where(a => a.PatientId == patientId.Value);
 
@@ -297,7 +339,8 @@ namespace Medical_Center_Management_System.Controllers
                 })
                 .ToList();
 
-            ViewData["AppointmentId"] = new SelectList(appointments, "AppointmentId", "DisplayText", selectedAppointmentId);
+            ViewData["AppointmentId"] = new SelectList(
+                appointments, "AppointmentId", "DisplayText", selectedAppointmentId);
         }
 
         private bool HistoryExists(int id) =>

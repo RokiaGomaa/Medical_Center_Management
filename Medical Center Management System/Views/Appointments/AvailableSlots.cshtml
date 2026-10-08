@@ -27,26 +27,26 @@
         <!-- Prev day -->
         @if (selectedDate > DateTime.Today)
         {
-            <a asp-action="AvailableSlots"
-               asp-route-date="@selectedDate.AddDays(-1).ToString("yyyy-MM-dd")"
-               asp-route-clinicId="@selectedClinic"
-               style="display:flex; align-items:center; justify-content:center;
+                <a asp-action="AvailableSlots"
+                   asp-route-date="@selectedDate.AddDays(-1).ToString("yyyy-MM-dd")"
+                   asp-route-clinicId="@selectedClinic"
+                   style="display:flex; align-items:center; justify-content:center;
                 width:34px; height:34px; border:1px solid var(--color-border);
                 border-radius:var(--radius-md); background:var(--color-surface);
                 color:var(--color-text-2); text-decoration:none;
                 transition:all var(--transition);"
-               onmouseover="this.style.background='var(--color-primary-light)'; this.style.color='var(--color-primary)';"
-               onmouseout="this.style.background='var(--color-surface)'; this.style.color='var(--color-text-2)';">
-                <i class="fa-solid fa-chevron-left" style="font-size:12px;"></i>
-            </a>
+                   onmouseover="this.style.background='var(--color-primary-light)'; this.style.color='var(--color-primary)';"
+                   onmouseout="this.style.background='var(--color-surface)'; this.style.color='var(--color-text-2)';">
+                    <i class="fa-solid fa-chevron-left" style="font-size:12px;"></i>
+                </a>
         }
         else
         {
-            <div style="width:34px; height:34px; border-radius:var(--radius-md);
+                <div style="width:34px; height:34px; border-radius:var(--radius-md);
                 background:var(--color-surface-2); display:flex;
                 align-items:center; justify-content:center; opacity:.4;">
-                <i class="fa-solid fa-chevron-left" style="font-size:12px; color:var(--color-text-3);"></i>
-            </div>
+                    <i class="fa-solid fa-chevron-left" style="font-size:12px; color:var(--color-text-3);"></i>
+                </div>
         }
 
         <!-- 7-day strip -->
@@ -56,25 +56,25 @@
                 var day = DateTime.Today.AddDays(d);
                 var isSelected = day.Date == selectedDate.Date;
                 var isToday = day.Date == DateTime.Today;
-                <a asp-action="AvailableSlots"
-                   asp-route-date="@day.ToString("yyyy-MM-dd")"
-                   asp-route-clinicId="@selectedClinic"
-                   style="flex:1; min-width:60px; padding:10px 6px; text-align:center;
+                    <a asp-action="AvailableSlots"
+                       asp-route-date="@day.ToString("yyyy-MM-dd")"
+                       asp-route-clinicId="@selectedClinic"
+                       style="flex:1; min-width:60px; padding:10px 6px; text-align:center;
                     border-radius:var(--radius-md); text-decoration:none;
                     border:1px solid @(isSelected ? "var(--color-primary)" : "var(--color-border)");
                     background:@(isSelected ? "var(--color-primary)" : "var(--color-surface)");
                     color:@(isSelected ? "white" : "var(--color-text-2)");
                     transition:all var(--transition);">
-                    <div style="font-size:10px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px;
+                        <div style="font-size:10px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px;
                         color:@(isSelected ? "rgba(255,255,255,.75)" : "var(--color-text-3)");">
                         @day.ToString("ddd")
-                    </div>
-                    <div style="font-size:16px; font-weight:700;">@day.Day</div>
+                        </div>
+                        <div style="font-size:16px; font-weight:700;">@day.Day</div>
                     @if (isToday && !isSelected)
                     {
-                        <div style="width:4px; height:4px; border-radius:50%; background:var(--color-primary); margin:3px auto 0;"></div>
+                                <div style="width:4px; height:4px; border-radius:50%; background:var(--color-primary); margin:3px auto 0;"></div>
                     }
-                </a>
+                    </a>
             }
         </div>
 
@@ -144,10 +144,10 @@
 
                     @foreach (var clinic in clinics)
                     {
-                        <option value="@clinic.ClinicId"
-                                selected="@(selectedClinic == clinic.ClinicId)">
+                            <option value="@clinic.ClinicId"
+                                    selected="@(selectedClinic == clinic.ClinicId)">
                             @clinic.Name
-                        </option>
+                            </option>
                     }
 
                 </select>
@@ -171,11 +171,11 @@
         &nbsp;·&nbsp;
         @if (totalSlots > 0)
         {
-            <span style="color:#1D9E75; font-weight:600;">@totalSlots slot(s) available</span>
+                <span style="color:#1D9E75; font-weight:600;">@totalSlots slot(s) available</span>
         }
         else
         {
-            <span style="color:var(--color-danger-text); font-weight:600;">No slots available</span>
+                <span style="color:var(--color-danger-text); font-weight:600;">No slots available</span>
         }
     </span>
 </div>
@@ -185,13 +185,13 @@
 <!-- ============================================================ -->
 @if (totalSlots == 0)
 {
-    <div class="data-table-wrapper">
-        <div class="empty-state">
-            <div class="empty-state-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
-            <h3>No available slots</h3>
-            <p>Try a different date using the calendar above.</p>
+        <div class="data-table-wrapper">
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+                <h3>No available slots</h3>
+                <p>Try a different date using the calendar above.</p>
+            </div>
         </div>
-    </div>
 }
 else
 {
@@ -201,21 +201,21 @@ else
             .Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Take(2).Select(w => w[0].ToString().ToUpper()));
 
-        <div class="data-table-wrapper" style="margin-bottom:16px;">
+                <div class="data-table-wrapper" style="margin-bottom:16px;">
 
-            <!-- Doctor header -->
-            <div style="padding:16px 20px; border-bottom:1px solid var(--color-border);
+                    <!-- Doctor header -->
+                    <div style="padding:16px 20px; border-bottom:1px solid var(--color-border);
                 display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-                <div style="width:44px; height:44px; border-radius:50%;
+                        <div style="width:44px; height:44px; border-radius:50%;
                     background:var(--color-primary-light); color:var(--color-primary-dark);
                     display:flex; align-items:center; justify-content:center;
                     font-size:15px; font-weight:700; flex-shrink:0;">
                     @initials
-                </div>
-                <div style="flex:1;">
+                        </div>
+                        <div style="flex:1;">
 
 
-                    <div style="font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px;">
+                            <div style="font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px;">
                         @item.Doctor.FullName
                         @{
                             var qual = item.Doctor.YearsOfExperience >= 10 ? "Consultant"
@@ -225,61 +225,61 @@ else
                                           : item.Doctor.YearsOfExperience >= 5 ? "badge-completed"
                                           : "badge-pending";
                         }
-                        <span class="badge-status @qualClass" style="font-size:11px;">@qual</span>
-                    </div>
+                                <span class="badge-status @qualClass" style="font-size:11px;">@qual</span>
+                            </div>
 
 
-                    <div style="font-size:12px; color:var(--color-text-3); margin-top:3px; display:flex; gap:10px; flex-wrap:wrap;">
-                        <span>
-                            <span class="badge-status badge-completed" style="font-size:11px;">
-                                <i class="fa-solid fa-stethoscope" style="font-size:9px;"></i>
+                            <div style="font-size:12px; color:var(--color-text-3); margin-top:3px; display:flex; gap:10px; flex-wrap:wrap;">
+                                <span>
+                                    <span class="badge-status badge-completed" style="font-size:11px;">
+                                        <i class="fa-solid fa-stethoscope" style="font-size:9px;"></i>
                                 @item.Doctor.Specialty?.Description
-                            </span>
-                        </span>
-                        <span>
-                            <i class="fa-solid fa-hospital" style="margin-right:3px;"></i>
+                                    </span>
+                                </span>
+                                <span>
+                                    <i class="fa-solid fa-hospital" style="margin-right:3px;"></i>
                             @item.Doctor.Clinic?.Name
-                        </span>
-                        <span>
-                            <i class="fa-regular fa-clock" style="margin-right:3px;"></i>
+                                </span>
+                                <span>
+                                    <i class="fa-regular fa-clock" style="margin-right:3px;"></i>
                             @item.Doctor.Clinic?.StartTime.ToString(@"hh\:mm") – @item.Doctor.Clinic?.EndTime.ToString(@"hh\:mm")
-                        </span>
-                        <span style="color:#1D9E75; font-weight:600;">
+                                </span>
+                                <span style="color:#1D9E75; font-weight:600;">
                             @item.AvailableSlots.Count slot(s) open
-                        </span>
-                    </div>
-                </div>
-                <div style="font-size:12px; color:var(--color-text-3);">
+                                </span>
+                            </div>
+                        </div>
+                        <div style="font-size:12px; color:var(--color-text-3);">
                     @item.Doctor.YearsOfExperience yr@(item.Doctor.YearsOfExperience == 1 ? "" : "s") experience
-                </div>
-            </div>
+                        </div>
+                    </div>
 
-            <!-- Slot grid -->
-            <div style="padding:16px 20px; display:flex; flex-wrap:wrap; gap:8px;">
+                    <!-- Slot grid -->
+                    <div style="padding:16px 20px; display:flex; flex-wrap:wrap; gap:8px;">
                 @foreach (var slot in item.AvailableSlots)
                 {
-                    <a asp-action="BookAppointment"
-                       asp-route-doctorId="@item.Doctor.DoctorId"
-                       asp-route-clinicId="@item.Doctor.ClinicId"
-                       asp-route-dateTime="@slot.ToString("yyyy-MM-ddTHH:mm:ss")"
-                       style="display:inline-flex; align-items:center; gap:6px;
+                                            <a asp-action="Create"
+                                   asp-route-doctorId="@item.Doctor.DoctorId"
+                                   asp-route-clinicId="@item.Doctor.ClinicId"
+                                   asp-route-dateTime="@slot.ToString("yyyy-MM-ddTHH:mm:ss")"
+                                   style="display:inline-flex; align-items:center; gap:6px;
                         padding:9px 18px; border:1px solid var(--color-border);
                         border-radius:var(--radius-md); background:var(--color-surface);
                         font-family:var(--font-mono); font-size:13px; font-weight:500;
                         color:var(--color-text-1); text-decoration:none;
                         transition:all var(--transition);"
-                       onmouseover="this.style.background='var(--color-primary)';
+                                   onmouseover="this.style.background='var(--color-primary)';
                         this.style.borderColor='var(--color-primary)';
                         this.style.color='white';"
-                       onmouseout="this.style.background='var(--color-surface)';
+                                   onmouseout="this.style.background='var(--color-surface)';
                         this.style.borderColor='var(--color-border)';
                         this.style.color='var(--color-text-1)';">
-                        <i class="fa-regular fa-clock" style="font-size:11px;"></i>
+                                    <i class="fa-regular fa-clock" style="font-size:11px;"></i>
                         @slot.ToString("HH:mm")
-                    </a>
+                                </a>
                 }
-            </div>
+                    </div>
 
-        </div>
+                </div>
     }
 }

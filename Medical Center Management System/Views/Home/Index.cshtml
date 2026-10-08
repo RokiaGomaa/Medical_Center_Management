@@ -1,129 +1,877 @@
-﻿@model DashboardViewModel
-
-@{
-    ViewData["Title"] = "Dashboard";
-    var recentAppts = Model.RecentAppointments;
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "Medix — Medical Center Management System";
 }
 
-<div class="stat-grid">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medix — Medical Center Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+            *, *::before, *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
 
-    <div class="stat-card">
-        <div class="stat-card-icon" style="background:#E1F5EE; color:#1D9E75;">
-            <i class="fa-solid fa-users"></i>
-        </div>
-        <div class="stat-card-label">Total Patients</div>
-        <div class="stat-card-value">@Model.TotalPatients</div>
-        <div class="stat-card-sub">Registered in system</div>
-    </div>
+            :root {
+                --green: #0F766E;
+                --green-dark: #0D5C56;
+                --green-light: #E1F5EE;
+                --green-mid: #1D9E75;
+                --slate: #1E293B;
+                --slate-mid: #475569;
+                --slate-light: #94A3B8;
+                --border: #E2E8F0;
+                --surface: #FFFFFF;
+                --bg: #F8FAFC;
+                --radius: 12px;
+                --radius-lg: 20px;
+            }
 
-    <div class="stat-card">
-        <div class="stat-card-icon" style="background:#EFF6FF; color:#3B82F6;">
-            <i class="fa-solid fa-user-doctor"></i>
-        </div>
-        <div class="stat-card-label">Doctors</div>
-        <div class="stat-card-value">@Model.TotalDoctors</div>
-        <div class="stat-card-sub">Active physicians</div>
-    </div>
+            body {
+                font-family: 'DM Sans', sans-serif;
+                background: var(--bg);
+                color: var(--slate);
+                line-height: 1.6;
+            }
 
-    <div class="stat-card">
-        <div class="stat-card-icon" style="background:#FFFBEB; color:#F59E0B;">
-            <i class="fa-solid fa-calendar-check"></i>
-        </div>
-        <div class="stat-card-label">Today's Appointments</div>
-        <div class="stat-card-value">@Model.TodayAppointments</div>
-        <div class="stat-card-sub">Scheduled for today</div>
-    </div>
+            /* ─── NAV ─── */
+            nav {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                background: rgba(255,255,255,.92);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid var(--border);
+                padding: 0 40px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                height: 64px;
+            }
 
-    <div class="stat-card">
-        <div class="stat-card-icon" style="background:#FEF2F2; color:#EF4444;">
-            <i class="fa-solid fa-hospital"></i>
-        </div>
-        <div class="stat-card-label">Clinics</div>
-        <div class="stat-card-value">@Model.TotalClinics</div>
-        <div class="stat-card-sub">Active locations</div>
-    </div>
+            .nav-logo {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+            }
 
-</div>
+            .nav-logo-mark {
+                width: 34px;
+                height: 34px;
+                background: var(--green);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 15px;
+            }
 
-<div class="data-table-wrapper">
+            .nav-logo-text {
+                font-size: 20px;
+                font-weight: 700;
+                color: var(--slate);
+            }
 
-    <div class="data-table-toolbar">
-        <div>
-            <div style="font-size:14px;font-weight:600;">Recent Appointments</div>
-            <div style="font-size:12px;">Latest @recentAppts.Count scheduled visits</div>
-        </div>
+            .nav-links {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
 
-        <a asp-controller="Appointments"
-           asp-action="Index" class="btn-primary-med">
-            <i class="fa-solid fa-arrow-right"></i> View all
-        </a>
-    </div>
+            .btn-outline {
+                padding: 8px 20px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                background: white;
+                color: var(--slate-mid);
+                font-family: 'DM Sans', sans-serif;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                text-decoration: none;
+                transition: all .15s;
+            }
 
-    @if (recentAppts.Any())
-    {
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Patient</th>
-                    <th>Doctor</th>
-                    <th>Clinic</th>
-                    <th>Date & Time</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var appt in recentAppts)
-                {
-                    var statusClass = appt.Status?.ToLower() switch
-                    {
-                        "confirmed" => "badge-confirmed",
-                        "pending" => "badge-pending",
-                        "cancelled" => "badge-cancelled",
-                        "completed" => "badge-completed",
-                        "needs follow up" => "badge-followup",
-                        _ => "badge-pending"
-                    };
-
-                    <tr>
-                        <td>
-                            <div style="display:flex;align-items:center;gap:10px;">
-                                <div style="width:30px;height:30px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;">
-                                    @(appt.Patient?.FullName?.Substring(0, 1).ToUpper() ?? "?")
-                                </div>
-                                <span>@appt.Patient?.FullName</span>
-                            </div>
-                        </td>
-
-                        <td>@appt.Doctor?.FullName</td>
-                        <td>@appt.Clinic?.Name</td>
-
-                        <td>
-                            @appt.AppointmentDate.ToString("MMM dd, yyyy HH:mm")
-                        </td>
-
-                        <td>
-                            <span class="badge-status @statusClass">
-                                @appt.Status
-                            </span>
-                        </td>
-
-                        <td>
-                            <a href="/Appointments/Details/@appt.AppointmentId" class="btn-action btn-action-view">View</a> |
-                            <a href="/Appointments/Edit/@appt.AppointmentId" class="btn-action btn-action-edit">Edit</a>
-                        </td>
-                    </tr>
+                .btn-outline:hover {
+                    border-color: var(--green);
+                    color: var(--green);
                 }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div class="empty-state">
-            <h3>No appointments yet</h3>
-            <p>Appointments you create will appear here.</p>
-        </div>
-    }
 
-</div>
+            .btn-primary {
+                padding: 8px 22px;
+                background: var(--green);
+                border: none;
+                border-radius: var(--radius);
+                color: white;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                transition: background .15s;
+            }
+
+                .btn-primary:hover {
+                    background: var(--green-dark);
+                }
+
+            /* ─── HERO ─── */
+            .hero {
+                padding: 100px 40px 80px;
+                text-align: center;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            .hero-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: var(--green-light);
+                color: var(--green);
+                border-radius: 20px;
+                padding: 6px 16px;
+                font-size: 13px;
+                font-weight: 600;
+                margin-bottom: 28px;
+            }
+
+            .hero h1 {
+                font-size: clamp(36px, 5vw, 58px);
+                font-weight: 700;
+                line-height: 1.15;
+                color: var(--slate);
+                margin-bottom: 20px;
+                letter-spacing: -0.5px;
+            }
+
+                .hero h1 span {
+                    color: var(--green);
+                }
+
+            .hero p {
+                font-size: 18px;
+                color: var(--slate-mid);
+                max-width: 560px;
+                margin: 0 auto 40px;
+                line-height: 1.7;
+            }
+
+            .hero-actions {
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .btn-hero {
+                padding: 14px 32px;
+                background: var(--green);
+                border: none;
+                border-radius: var(--radius);
+                color: white;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 16px;
+                font-weight: 600;
+                text-decoration: none;
+                transition: background .15s, transform .1s;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .btn-hero:hover {
+                    background: var(--green-dark);
+                    transform: translateY(-1px);
+                }
+
+            .btn-hero-sec {
+                padding: 14px 32px;
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                color: var(--slate-mid);
+                font-family: 'DM Sans', sans-serif;
+                font-size: 16px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: border-color .15s, color .15s;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .btn-hero-sec:hover {
+                    border-color: var(--green);
+                    color: var(--green);
+                }
+
+            /* ─── STATS STRIP ─── */
+            .stats-strip {
+                background: white;
+                border-top: 1px solid var(--border);
+                border-bottom: 1px solid var(--border);
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .stat-item {
+                padding: 28px 20px;
+                text-align: center;
+                border-right: 1px solid var(--border);
+            }
+
+                .stat-item:last-child {
+                    border-right: none;
+                }
+
+            .stat-num {
+                font-size: 32px;
+                font-weight: 700;
+                color: var(--green);
+                line-height: 1;
+                margin-bottom: 6px;
+            }
+
+            .stat-label {
+                font-size: 13px;
+                color: var(--slate-light);
+                font-weight: 500;
+            }
+
+            /* ─── SECTIONS ─── */
+            .section {
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 80px 40px;
+            }
+
+            .section-eyebrow {
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: .1em;
+                color: var(--green);
+                margin-bottom: 12px;
+            }
+
+            .section-title {
+                font-size: clamp(26px, 3vw, 36px);
+                font-weight: 700;
+                color: var(--slate);
+                margin-bottom: 14px;
+                letter-spacing: -0.3px;
+            }
+
+            .section-sub {
+                font-size: 16px;
+                color: var(--slate-mid);
+                max-width: 520px;
+                line-height: 1.7;
+                margin-bottom: 48px;
+            }
+
+            /* ─── FEATURES GRID ─── */
+            .features-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+
+            .feature-card {
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 28px;
+                transition: box-shadow .2s, transform .2s;
+            }
+
+                .feature-card:hover {
+                    box-shadow: 0 8px 24px rgba(0,0,0,.07);
+                    transform: translateY(-2px);
+                }
+
+            .feature-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: var(--green-light);
+                color: var(--green);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                margin-bottom: 18px;
+            }
+
+            .feature-title {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--slate);
+                margin-bottom: 8px;
+            }
+
+            .feature-desc {
+                font-size: 14px;
+                color: var(--slate-mid);
+                line-height: 1.65;
+            }
+
+            /* ─── ROLES ─── */
+            .roles-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+
+            .role-card {
+                border-radius: var(--radius-lg);
+                padding: 32px;
+                border: 1px solid var(--border);
+            }
+
+                .role-card.admin {
+                    background: #F0FDF4;
+                    border-color: #BBF7D0;
+                }
+
+                .role-card.doctor {
+                    background: #EFF6FF;
+                    border-color: #BFDBFE;
+                }
+
+                .role-card.patient {
+                    background: #FFFBEB;
+                    border-color: #FDE68A;
+                }
+
+            .role-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                margin-bottom: 16px;
+            }
+
+            .admin .role-icon {
+                background: #DCFCE7;
+                color: #16A34A;
+            }
+
+            .doctor .role-icon {
+                background: #DBEAFE;
+                color: #2563EB;
+            }
+
+            .patient.role-icon {
+                background: #FEF3C7;
+                color: #D97706;
+            }
+
+            .role-card.patient .role-icon {
+                background: #FEF3C7;
+                color: #D97706;
+            }
+
+            .role-name {
+                font-size: 18px;
+                font-weight: 700;
+                color: var(--slate);
+                margin-bottom: 10px;
+            }
+
+            .role-desc {
+                font-size: 14px;
+                color: var(--slate-mid);
+                line-height: 1.65;
+                margin-bottom: 18px;
+            }
+
+            .role-perks {
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+                .role-perks li {
+                    font-size: 13px;
+                    color: var(--slate-mid);
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                    .role-perks li i {
+                        color: var(--green);
+                        font-size: 11px;
+                        flex-shrink: 0;
+                    }
+
+            /* ─── TEAM ─── */
+            .team-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 20px;
+            }
+
+            .team-card {
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 28px 20px;
+                text-align: center;
+                transition: box-shadow .2s;
+            }
+
+                .team-card:hover {
+                    box-shadow: 0 4px 16px rgba(0,0,0,.07);
+                }
+
+            .team-avatar {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                background: var(--green-light);
+                color: var(--green-dark);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                font-weight: 700;
+                margin: 0 auto 14px;
+            }
+
+            .team-name {
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--slate);
+                margin-bottom: 4px;
+            }
+
+            .team-role {
+                font-size: 12.5px;
+                color: var(--slate-light);
+                margin-bottom: 14px;
+            }
+
+            .team-linkedin {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12.5px;
+                color: #0A66C2;
+                text-decoration: none;
+                font-weight: 500;
+                padding: 5px 12px;
+                border: 1px solid #BFDBFE;
+                border-radius: 20px;
+                background: #EFF6FF;
+                transition: background .15s;
+            }
+
+                .team-linkedin:hover {
+                    background: #DBEAFE;
+                }
+
+            /* ─── CTA SECTION ─── */
+            .cta-section {
+                background: var(--green);
+                padding: 72px 40px;
+                text-align: center;
+            }
+
+                .cta-section h2 {
+                    font-size: clamp(26px, 3vw, 36px);
+                    font-weight: 700;
+                    color: white;
+                    margin-bottom: 14px;
+                }
+
+                .cta-section p {
+                    font-size: 16px;
+                    color: rgba(255,255,255,.8);
+                    margin-bottom: 36px;
+                }
+
+            .cta-actions {
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .btn-cta-white {
+                padding: 14px 32px;
+                background: white;
+                border: none;
+                border-radius: var(--radius);
+                color: var(--green);
+                font-family: 'DM Sans', sans-serif;
+                font-size: 16px;
+                font-weight: 700;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                transition: opacity .15s;
+            }
+
+                .btn-cta-white:hover {
+                    opacity: .9;
+                }
+
+            .btn-cta-outline {
+                padding: 14px 32px;
+                background: transparent;
+                border: 2px solid rgba(255,255,255,.5);
+                border-radius: var(--radius);
+                color: white;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 16px;
+                font-weight: 500;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                transition: border-color .15s;
+            }
+
+                .btn-cta-outline:hover {
+                    border-color: white;
+                }
+
+            /* ─── FOOTER ─── */
+            footer {
+                background: var(--slate);
+                color: rgba(255,255,255,.5);
+                text-align: center;
+                padding: 28px 40px;
+                font-size: 13px;
+            }
+
+                footer span {
+                    color: rgba(255,255,255,.8);
+                }
+
+            /* ─── DIVIDER ─── */
+            .divider {
+                border: none;
+                border-top: 1px solid var(--border);
+            }
+
+            /* media (max-width: 768px) {
+                nav {
+                    padding: 0 20px;
+                }
+
+                .hero {
+                    padding: 60px 20px 50px;
+                }
+
+                .stats-strip {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+
+                .features-grid, .roles-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .section {
+                    padding: 60px 20px;
+                }
+
+                .cta-section {
+                    padding: 60px 20px;
+                }
+            } */
+            .team-github {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12.5px;
+                color: var(--slate);
+                text-decoration: none;
+                font-weight: 500;
+                padding: 5px 12px;
+                border: 1px solid var(--border);
+                border-radius: 20px;
+                background: #F8FAFC;
+                transition: background .15s, border-color .15s, color .15s;
+            }
+
+                .team-github:hover {
+                    background: #F1F5F9;
+                    border-color: #94A3B8;
+                    color: #000;
+                }
+    </style>
+</head>
+<body>
+
+    <!-- ═══ NAVBAR ═══ -->
+    <nav>
+        <a href="/" class="nav-logo">
+            <div class="nav-logo-mark"><i class="fa-solid fa-plus"></i></div>
+            <span class="nav-logo-text">Medix</span>
+        </a>
+        <div class="nav-links">
+            <a href="#features" class="btn-outline">Features</a>
+            <a href="#team" class="btn-outline">Team</a>
+            <a asp-controller="Auth" asp-action="Login" class="btn-outline">Sign In</a>
+            <a asp-controller="Auth" asp-action="Register" class="btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- ═══ HERO ═══ -->
+    <section class="hero">
+        <div class="hero-badge">
+            <i class="fa-solid fa-circle-check"></i>
+            Medical Center Management System
+        </div>
+
+        <h1>
+            Healthcare management,<br>
+            <span>built for everyone</span>
+        </h1>
+
+        <p>
+            Medix connects patients, doctors, and administrators in one unified platform —
+            from booking appointments to managing clinical histories.
+        </p>
+
+        <div class="hero-actions">
+            <a asp-controller="Auth" asp-action="Register" class="btn-hero">
+                <i class="fa-solid fa-user-plus"></i> Register as Patient
+            </a>
+            <a asp-controller="Auth" asp-action="Login" class="btn-hero-sec">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </a>
+        </div>
+    </section>
+
+    <!-- ═══ STATS ═══ -->
+    <div class="stats-strip">
+        <div class="stat-item">
+            <div class="stat-num">10+</div>
+            <div class="stat-label">Specialist Doctors</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">5</div>
+            <div class="stat-label">Medical Specialties</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">30min</div>
+            <div class="stat-label">Appointment Slots</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">24/7</div>
+            <div class="stat-label">Online Booking</div>
+        </div>
+    </div>
+
+    <!-- ═══ ABOUT ═══ -->
+    <section class="section">
+        <div class="section-eyebrow">About Medix</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;">
+            <div>
+                <div class="section-title">One platform for the entire patient journey</div>
+                <p style="font-size:15px; color:var(--slate-mid); line-height:1.75; margin-bottom:20px;">
+                    Medix was built to simplify how medical centers operate. From the moment a
+                    patient books a slot to when a doctor writes the clinical history, every step
+                    is handled in a single, modern system.
+                </p>
+                <p style="font-size:15px; color:var(--slate-mid); line-height:1.75;">
+                    Administrators get a full overview of the center. Doctors focus on their
+                    patients without paperwork friction. Patients see their health journey in one
+                    clear place. That's Medix.
+                </p>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                @{
+                    var highlights = new[]
+                    {
+                        ("fa-hospital",          "#E1F5EE", "#1D9E75", "Multi-clinic",    "Manage multiple clinic locations"),
+                        ("fa-shield-halved",     "#EFF6FF", "#3B82F6", "Role-based Access","Admin, Doctor & Patient portals"),
+                        ("fa-file-medical",      "#FEF2F2", "#EF4444", "Medical Records",  "Full health history per patient"),
+                        ("fa-calendar-check",    "#FFFBEB", "#F59E0B", "Smart Scheduling", "Conflict-free appointment booking"),
+                    };
+                }
+                @foreach (var (icon, bg, color, title, desc) in highlights)
+                {
+                    <div style="background:white; border:1px solid var(--border); border-radius:var(--radius); padding:20px;">
+                        <div style="width:40px; height:40px; border-radius:10px; background:@bg; color:@color; display:flex; align-items:center; justify-content:center; font-size:17px; margin-bottom:12px;">
+                            <i class="fa-solid @icon"></i>
+                        </div>
+                        <div style="font-size:13.5px; font-weight:600; color:var(--slate); margin-bottom:4px;">@title</div>
+                        <div style="font-size:12.5px; color:var(--slate-light); line-height:1.5;">@desc</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- ═══ FEATURES ═══ -->
+    <section class="section" id="features">
+        <div class="section-eyebrow">What We Offer</div>
+        <div class="section-title">Everything a medical center needs</div>
+        <div class="section-sub">
+            Built with real workflows in mind — not just forms and tables.
+        </div>
+
+        <div class="features-grid">
+            @{
+                var features = new[]
+                {
+                    ("fa-calendar-plus",       "Online Appointment Booking",     "Patients browse available slots by date and specialty, then confirm in one click."),
+                    ("fa-clock-rotate-left",    "Clinical History Tracking",      "Doctors record diagnosis, treatment, and follow-up dates after each appointment."),
+                    ("fa-file-medical",         "Medical Records",                "One unified health record per patient — blood type, conditions, medications and more."),
+                    ("fa-file-pdf",             "PDF Report Export",              "Generate and download a full patient report as a clean, printable PDF."),
+                    ("fa-users-gear",           "User & Role Management",         "Admins assign Doctor roles, manage accounts, and control access across the system."),
+                    ("fa-chart-simple",         "Admin Dashboard",                "Live stats on patients, doctors, clinics and today's appointments at a glance."),
+                    ("fa-stethoscope",          "Specialty & Clinic Management",  "Organise your centre by specialty, link clinics, set working hours and consultation fees."),
+                    ("fa-triangle-exclamation", "Conflict Detection",             "The system auto-checks for double-booked doctors, patients, and clinic slots."),
+                    ("fa-user-doctor",          "Doctor Portal",                  "Doctors manage their own appointments, write histories, and view patient profiles."),
+                };
+            }
+            @foreach (var (icon, title, desc) in features)
+            {
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid @icon"></i></div>
+                    <div class="feature-title">@title</div>
+                    <div class="feature-desc">@desc</div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- ═══ WHO IS IT FOR ═══ -->
+    <section class="section">
+        <div class="section-eyebrow">Portals</div>
+        <div class="section-title">Built for three types of users</div>
+        <div class="section-sub">Each role gets its own tailored experience.</div>
+
+        <div class="roles-grid">
+            <div class="role-card admin">
+                <div class="role-icon"><i class="fa-solid fa-users-gear"></i></div>
+                <div class="role-name">Administrator</div>
+                <div class="role-desc">Full control over the system — manage every entity and keep the centre running smoothly.</div>
+                <ul class="role-perks">
+                    <li><i class="fa-solid fa-check"></i> Dashboard with live statistics</li>
+                    <li><i class="fa-solid fa-check"></i> Manage specialties, clinics & doctors</li>
+                    <li><i class="fa-solid fa-check"></i> Full patient & appointment oversight</li>
+                    <li><i class="fa-solid fa-check"></i> User & role management</li>
+                    <li><i class="fa-solid fa-check"></i> Delete & cascade operations</li>
+                </ul>
+            </div>
+
+            <div class="role-card doctor">
+                <div class="role-icon" style="background:#DBEAFE; color:#2563EB;"><i class="fa-solid fa-user-doctor"></i></div>
+                <div class="role-name">Doctor</div>
+                <div class="role-desc">A focused portal to manage daily appointments and maintain patient clinical records.</div>
+                <ul class="role-perks">
+                    <li><i class="fa-solid fa-check"></i> Today's schedule at a glance</li>
+                    <li><i class="fa-solid fa-check"></i> Update appointment statuses</li>
+                    <li><i class="fa-solid fa-check"></i> Write & edit clinical histories</li>
+                    <li><i class="fa-solid fa-check"></i> View full patient profiles</li>
+                    <li><i class="fa-solid fa-check"></i> Edit patient medical records</li>
+                </ul>
+            </div>
+
+            <div class="role-card patient">
+                <div class="role-icon"><i class="fa-solid fa-user-injured"></i></div>
+                <div class="role-name">Patient</div>
+                <div class="role-desc">A personal health hub — book appointments, view history, and track your medical journey.</div>
+                <ul class="role-perks">
+                    <li><i class="fa-solid fa-check"></i> Browse available time slots</li>
+                    <li><i class="fa-solid fa-check"></i> Book appointments with one click</li>
+                    <li><i class="fa-solid fa-check"></i> View upcoming & past visits</li>
+                    <li><i class="fa-solid fa-check"></i> Read clinical history records</li>
+                    <li><i class="fa-solid fa-check"></i> View personal medical record</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- ═══ TEAM ═══ -->
+    <section class="section" id="team">
+        <div class="section-eyebrow">The Team</div>
+        <div class="section-title">Built by students, for real use</div>
+        <div class="section-sub">
+            Medix was designed and developed as a project by a dedicated team of software engineering students.
+        </div>
+
+        <div class="team-grid">
+            @{
+                // ✏️ Edit names, roles and LinkedIn URLs here
+                var team = new[]
+                {
+                    ("Rokia Gomaa",  "Backend Developer",      "https://linkedin.com/in/RokiaGomaa",  "https://github.com/RokiaGomaa"),
+                    ("Asmaa Ahmed",     "Database Engineer",     "https://linkedin.com/in/asmaa-ahmed-44b879286",  "https://github.com/asmaaahmdd"),
+                    ("Aya Tharwat",  "Backend Developer",     "https://linkedin.com/in/aya-tharwat-ahmed-a33a902b6",  "https://github.com/AyaTharwat"),
+                    ("Reham Ahmed",   "Backend Developer",    "https://linkedin.com/in/",  "https://github.com"),
+                    ("Dai-Elqamar Ashraf",  "System Architect",      "https://linkedin.com/in/",  "https://github.com"),
+                    ("Eman Salah","System Architect",      "https://linkedin.com/in/",  "https://github.com/Emansalah"),
+                    ("Eman Salman",     "Full Stack Developer",  "https://linkedin.com/in/",  "https://github.com/esalman22"),
+                };
+            }
+            @foreach (var (name, role, linkedin, github) in team)
+            {
+                var initials = string.Join("", name.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()));
+                <div class="team-card">
+                    <div class="team-avatar">@initials</div>
+                    <div class="team-name">@name</div>
+                    <div class="team-role">@role</div>
+                    <a href="@linkedin" target="_blank" class="team-linkedin">
+                        <i class="fa-brands fa-linkedin"></i> LinkedIn
+                    </a>
+                    <a href="@github" target="_blank" class="team-github">
+                        <i class="fa-brands fa-github"></i> GitHub
+                    </a>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- ═══ CTA ═══ -->
+    <section class="cta-section">
+        <h2>Ready to get started?</h2>
+        <p>Create a patient account in seconds and book your first appointment today.</p>
+        <div class="cta-actions">
+            <a asp-controller="Auth" asp-action="Register" class="btn-cta-white">
+                <i class="fa-solid fa-user-plus"></i> Create Free Account
+            </a>
+            <a asp-controller="Auth" asp-action="Login" class="btn-cta-outline">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </a>
+        </div>
+    </section>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer>
+        <span>Medix</span> — Medical Center Management System &nbsp;·&nbsp;
+        Built with <i class="fa-solid fa-heart" style="color:#EF4444;font-size:11px;"></i> by the Medix Team
+        &nbsp;·&nbsp; &copy; @DateTime.Now.Year
+    </footer>
+
+</body>
+</html>

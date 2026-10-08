@@ -77,16 +77,16 @@ namespace Medical_Center_Management_System
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Auth}/{action=Login}/{id?}");
+            //app.MapControllerRoute(
+            //    name: "default",
+            //    pattern: "{controller=Home}/{action=Index}/{id?}");
 
             // =========================================
             // Seed roles and default admin account
-            // =========================================
+            //// =========================================
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Auth}/{action=Login}/{id?}");
+                pattern: "{controller=Home}/{action=Index}/{id?}");
 
             await SeedData.InitializeAsync(app.Services);
 

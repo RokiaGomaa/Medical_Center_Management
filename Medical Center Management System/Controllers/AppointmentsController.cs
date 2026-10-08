@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Medical_Center_Management_System.Controllers
 {
-    [Authorize(Roles = "Admin,Patient")]
+    [Authorize(Roles = "Admin")]
   
     public class AppointmentsController : Controller
     {
@@ -17,76 +17,110 @@ namespace Medical_Center_Management_System.Controllers
         {
             _context = context;
         }
+        private const int SlotMinutes = 30;
+        // Displays available time slots for doctors based on date and clinic schedule
+        // Excludes booked and past time slots
+        public async Task<IActionResult> AvailableSlots(DateTime? date, int? clinicId, string? search) {
+            //بتجيب المواعيد الفاضية لكل دكتور في يوم معين عشان المستخدم يختار ويحجز منها
+            var targetDate = date?.Date ?? DateTime.Today;
 
-        public async Task<IActionResult> AvailableToday()
-        {
-            const int AppointmentDurationMinutes = 30;
+            ViewBag.SelectedDate = targetDate;
+            ViewBag.SelectedClinic = clinicId;
 
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
+            var tomorrow = targetDate.AddDays(1);
 
-            var appointmentsToday = await _context.Appointments
+            // Appointments already booked in selected day
+            var bookedToday = await _context.Appointments
                 .Where(a =>
-                    a.AppointmentDate >= today &&
+                    a.AppointmentDate >= targetDate &&
                     a.AppointmentDate < tomorrow &&
-                    a.Status != "Canceled"
-                )
+                    a.Status != "Cancelled")
                 .ToListAsync();
 
-            var doctors = await _context.Doctors.ToListAsync();
-            var clinics = await _context.Clinics.ToListAsync();
+            // Clinics for filter dropdown
+            var clinics = await _context.Clinics
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
-            var result = new List<object>();
+            ViewBag.Clinics = clinics;
+
+            // Doctors query
+            var doctorsQuery = _context.Doctors
+                .Include(d => d.Clinic)
+                .Include(d => d.Specialty)
+                .AsQueryable();
+
+            // Filter by clinic
+            if (clinicId.HasValue)
+            {
+                doctorsQuery = doctorsQuery
+                    .Where(d => d.ClinicId == clinicId.Value);
+            }
+
+            var doctors = await doctorsQuery.ToListAsync();
+
+            // Filter by doctor name search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                doctors = doctors
+                    .Where(d => d.FullName.Contains(search, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            ViewBag.Search = search;
+
+            var result = new List<DoctorSlotsVM>();
 
             foreach (var doctor in doctors)
-            {
-                var clinic = clinics.FirstOrDefault(c => c.ClinicId == doctor.ClinicId);
-
-                if (clinic == null)
+            {  
+                if (doctor.Clinic == null)
                     continue;
 
-                var slots = new List<object>();
+                var slots = new List<DateTime>();
 
-                var start = today.Add(clinic.StartTime);
-                var end = today.Add(clinic.EndTime);
+                var cursor = targetDate.Add(doctor.Clinic.StartTime);
 
-                while (start.AddMinutes(AppointmentDurationMinutes) <= end)
+                var end = targetDate.Add(doctor.Clinic.EndTime);
+
+                while (cursor.AddMinutes(SlotMinutes) <= end)
                 {
-                    var slotStart = start;
-                    var slotEnd = start.AddMinutes(AppointmentDurationMinutes);
-
-                    bool isTaken = appointmentsToday.Any(a =>
-                        a.DoctorId == doctor.DoctorId &&
-                        slotStart < a.AppointmentDate.AddMinutes(AppointmentDurationMinutes) &&
-                        slotEnd > a.AppointmentDate
-                    );
-
-                    if (!isTaken)
+                    // Skip past slots when viewing today
+                    if (targetDate.Date == DateTime.Today &&
+                        cursor < DateTime.Now)
                     {
-                        slots.Add(new
-                        {
-                            Time = slotStart,
-                            DoctorId = doctor.DoctorId,
-                            ClinicId = clinic.ClinicId
-                        });
+                        cursor = cursor.AddMinutes(SlotMinutes);
+                        continue;
                     }
 
-                    start = start.AddMinutes(AppointmentDurationMinutes);
+                    bool taken = bookedToday.Any(a =>
+                        a.DoctorId == doctor.DoctorId &&
+                        cursor < a.AppointmentDate.AddMinutes(SlotMinutes) &&
+                        //هل بدايه السلوت قبل نهايه الموعد المحجوز يعني لو حجز في نص الموعد 
+                        cursor.AddMinutes(SlotMinutes) > a.AppointmentDate);
+
+                    if (!taken)
+                    {
+                        slots.Add(cursor);
+                    }
+
+                    cursor = cursor.AddMinutes(SlotMinutes);
                 }
 
-                result.Add(new
+                if (slots.Any())
                 {
-                    DoctorId = doctor.DoctorId,
-                    DoctorName = doctor.FullName,
-                    ClinicId = clinic.ClinicId,
-                    ClinicName = clinic.Name,
-                    Slots = slots
-                });
+                    result.Add(new DoctorSlotsVM
+                    {
+                        Doctor = doctor,
+                        AvailableSlots = slots
+                    });
+                }
             }
 
             return View(result);
         }
 
+        // Displays all appointments with support for:
+        // searching, filtering by status, sorting, and pagination
         public async Task<IActionResult> Index(string search, string status, DateTime? date, string sortOrder, int pageNumber = 1)
         {
             var query = _context.Appointments
@@ -143,14 +177,16 @@ namespace Medical_Center_Management_System.Controllers
             }
 
             int pageSize = 5;
-
+            await AutoCompleteAppointments();
             return View(await PaginatedList<Appointment>.CreateAsync(
                 query,
                 pageNumber,
                 pageSize
             ));
+           
         }
 
+        // Shows detailed information for a single appointment including doctor, patient, clinic, and history
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -162,6 +198,7 @@ namespace Medical_Center_Management_System.Controllers
                 .Include(a => a.Patient)
                 .Include(a => a.Clinic)
                 .Include(a => a.History)
+                //انا هنا بعرض الداتا مش بعدل عليها 
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.AppointmentId == id);
 
@@ -170,8 +207,9 @@ namespace Medical_Center_Management_System.Controllers
 
             return View(appointment);
         }
-
-        public IActionResult Create(DateTime? dateTime, int? clinicId, int? patientId, bool returnToHistory = false)
+        //GET
+        // Opens the create appointment page with optional pre-filled data (patient, clinic, date)
+        public IActionResult Create(DateTime? dateTime, int? clinicId, int? patientId, int? doctorId, bool returnToHistory = false)
         {
             var appointment = new Appointment();
 
@@ -183,6 +221,7 @@ namespace Medical_Center_Management_System.Controllers
 
             if (patientId.HasValue)
                 appointment.PatientId = patientId.Value;
+            //علي حسب هو جاي منين يرجع 
 
             ViewBag.ReturnToHistory = returnToHistory;
             ViewBag.ReturnPatientId = patientId;
@@ -192,6 +231,7 @@ namespace Medical_Center_Management_System.Controllers
             return View(appointment);
         }
 
+        // returns the clinic information for a selected doctor (used in JavaScript)
         [HttpGet]
         public async Task<IActionResult> GetDoctorClinic(int doctorId)
         {
@@ -217,15 +257,22 @@ namespace Medical_Center_Management_System.Controllers
             });
         }
 
+        // Creates a new appointment with full validation:
+        // - Doctor existence check
+        // - Clinic working hours validation
+        // - No past appointments allowed
+        // - Conflict detection (doctor, patient, clinic)
+        // - Daily clinic capacity check
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Appointment appointment, bool returnToHistory = false, int? returnPatientId = null)
-        {
+        {   //بنمسح التحقق الذاتي علشان مش هنكتبهمم ب ادينا بيجو من اليوزر
             ModelState.Remove("Doctor");
             ModelState.Remove("Patient");
             ModelState.Remove("Clinic");
             ModelState.Remove("History");
-
+            // بنجيب الدكتور و العياده 
             var doctor = await _context.Doctors
                 .Include(d => d.Clinic)
                 .FirstOrDefaultAsync(d => d.DoctorId == appointment.DoctorId);
@@ -236,7 +283,7 @@ namespace Medical_Center_Management_System.Controllers
                 LoadDropDowns(appointment);
                 return View(appointment);
             }
-
+            //أي حجز يتربط تلقائي بعيادة الدكتور
             appointment.ClinicId = doctor.ClinicId;
 
             var clinic = doctor.Clinic;
@@ -244,7 +291,7 @@ namespace Medical_Center_Management_System.Controllers
             var appointmentTime = appointment.AppointmentDate.TimeOfDay;
 
             bool isValidTime;
-
+            //هل الموعد داخل وقت الشغل
             if (clinic.StartTime < clinic.EndTime)
             {
                 isValidTime =
@@ -264,12 +311,20 @@ namespace Medical_Center_Management_System.Controllers
                 LoadDropDowns(appointment);
                 return View(appointment);
             }
+            //هل الموعد قديم 
+            if (appointment.AppointmentDate < DateTime.Now)
+            {
+                ModelState.AddModelError("AppointmentDate","Cannot book an appointment in the past.");
+                LoadDropDowns(appointment);
+                return View(appointment);
+            }
+
 
             const int AppointmentDurationMinutes = 30;
 
             var newStart = appointment.AppointmentDate;
             var newEnd = newStart.AddMinutes(AppointmentDurationMinutes);
-
+            //هل في أي حجز تاني بيتعارض مع الحجز الجديد؟
             var conflictingAppointment = await _context.Appointments
                 .FirstOrDefaultAsync(a =>
                     (
@@ -279,6 +334,7 @@ namespace Medical_Center_Management_System.Controllers
                     )
                     &&
                     (
+                        //أي overlap بين الوقتين
                         newStart < a.AppointmentDate.AddMinutes(AppointmentDurationMinutes) &&
                         newEnd > a.AppointmentDate
                     )
@@ -310,7 +366,7 @@ namespace Medical_Center_Management_System.Controllers
                 LoadDropDowns(appointment);
                 return View(appointment);
             }
-
+            //التحقق م عدد البيشنت في اليوم 
             var patientsCount = await _context.Appointments
                 .CountAsync(a =>
                     a.ClinicId == appointment.ClinicId &&
@@ -333,19 +389,19 @@ namespace Medical_Center_Management_System.Controllers
             _context.Add(appointment);
 
             await _context.SaveChangesAsync();
-
             if (returnToHistory)
             {
                 return RedirectToAction(
                     "Create",
                     "Histories",
-                    new { appointmentId = appointment.AppointmentId }
+                    new { patientId = appointment.PatientId }
                 );
             }
-
             return RedirectToAction("Index");
         }
-
+        //GET
+        // Opens the edit page for an existing appointment
+        // Prevents editing past appointments
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -358,10 +414,22 @@ namespace Medical_Center_Management_System.Controllers
             if (appointment == null)
                 return NotFound();
 
+            if (appointment.AppointmentDate < DateTime.Now)
+            {
+                ModelState.AddModelError("AppointmentDate","Cannot book an appointment in the past.");
+                LoadDropDowns(appointment);
+                return View(appointment);
+            }
+
             LoadDropDowns(appointment);
 
             return View(appointment);
         }
+
+        // Updates an existing appointment with validation:
+        // - Doctor validation
+        // - Working hours check
+        // - Conflict detection for overlapping appointments
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -405,7 +473,7 @@ namespace Medical_Center_Management_System.Controllers
                 LoadDropDowns(appointment);
                 return View(appointment);
             }
-
+            //هنا بنشوف هل في كونفلكت ولا لا
             var newStart = appointment.AppointmentDate;
             var newEnd = newStart.AddMinutes(AppointmentDurationMinutes);
 
@@ -449,6 +517,7 @@ namespace Medical_Center_Management_System.Controllers
 
                 await _context.SaveChangesAsync();
             }
+            // لحل أكتر من شخص بيعدّل نفس الحاجة في نفس الوقت
             catch (DbUpdateConcurrencyException)
             {
                 if (!AppointmentExists(appointment.AppointmentId))
@@ -460,6 +529,8 @@ namespace Medical_Center_Management_System.Controllers
             return RedirectToAction("Index");
         }
 
+        //GET
+        // Displays confirmation page before deleting an appointment
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -477,6 +548,7 @@ namespace Medical_Center_Management_System.Controllers
 
             return View(appointment);
         }
+        // Deletes appointment and removes related history if exists
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -487,6 +559,7 @@ namespace Medical_Center_Management_System.Controllers
 
             if (appointment == null)
                 return NotFound();
+            //هل في هيستوري مربوط بالموعد ده
 
             var history = await _context.Histories
                 .FirstOrDefaultAsync(h =>
@@ -507,9 +580,10 @@ namespace Medical_Center_Management_System.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
+        // Loads dropdown lists for doctors, patients, and clinics in views
         private void LoadDropDowns(Appointment appointment = null)
         {
+            //الدالة دي بتجهّز الفورم كله عشان المستخدم يختار دكتور/مريض/عيادة بسهولة بدل ما يكتب IDs
             ViewData["DoctorId"] =
                 new SelectList(_context.Doctors, "DoctorId", "FullName", appointment?.DoctorId);
 
@@ -520,9 +594,29 @@ namespace Medical_Center_Management_System.Controllers
                 new SelectList(_context.Clinics, "ClinicId", "Name", appointment?.ClinicId);
         }
 
+        // Checks if an appointment exists in the database (used for concurrency validation)
         private bool AppointmentExists(int id)
         {
             return _context.Appointments.Any(e => e.AppointmentId == id);
+        }
+
+        // Automatically marks appointments as "Completed" when their time has passed
+        private async Task AutoCompleteAppointments()
+        {
+            var now = DateTime.Now;
+
+            var expiredAppointments = await _context.Appointments
+                .Where(a => a.Status != "Completed"
+                         && a.AppointmentDate.AddMinutes(30) < now)
+                .ToListAsync();
+
+            foreach (var app in expiredAppointments)
+            {
+                app.Status = "Completed";
+            }
+
+            if (expiredAppointments.Any())
+                await _context.SaveChangesAsync();
         }
     }
 }
